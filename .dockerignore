@@ -1,0 +1,27 @@
+# Python/venv
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.cache/
+.env
+
+# Git
+.git/
+.gitignore
+
+# Local data
+chroma_db/
+docs/
+debug_output/
+
+# OS/Editor
+.DS_Store
+.vscode/
+
+# Node / React
+node_modules/
+web/node_modules/
+web/dist/
+web/.env
+web/.env.local

@@ -1,0 +1,21 @@
+.git
+.gitignore
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.vscode/
+.env
+
+# Local data / Docs
+README.md
+TESTING.md
+docs/
+chroma_db/
+debug_output/
+
+
+# Deployment specific
+docker-compose.yml
+.dockerignore
+.gcloudignore

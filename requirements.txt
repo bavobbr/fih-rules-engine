@@ -1,0 +1,22 @@
+# AI & LangChain
+langchain-google-vertexai
+langchain-community
+langchain-core<1.0.0
+google-cloud-documentai
+google-cloud-storage
+pypdf
+google-genai
+
+# Database Drivers
+cloud-sql-python-connector[pg8000]
+pg8000
+sqlalchemy
+
+# Utilities
+python-dotenv
+pandas==2.3.3
+
+# Backend API
+fastapi
+uvicorn
+python-multipart

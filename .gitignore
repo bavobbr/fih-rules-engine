@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.python-version
+
+# Environments
+.venv/
+env/
+venv/
+.env
+
+# Editors/OS
+.DS_Store
+.idea/
+.vscode/
+
+# Caches & build
+.pytest_cache/
+.coverage
+dist/
+build/
+.cache/
+
+# Local vector stores
+chroma_db/
+debug_output/
+
+# Agent / IDE
+.agent/
+.gemini/
