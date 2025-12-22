@@ -3,8 +3,8 @@ from google.cloud import documentai
 from google.api_core.client_options import ClientOptions
 import os
 
-PROJECT_ID = "langchain-poc-479114"
-LOCATION = "us"  # Document AI locations are 'us' or 'eu'
+PROJECT_ID = "fih-rules-engine"
+LOCATION = "eu"  # Document AI locations are 'us' or 'eu'
 
 def get_or_create_processor():
     # You must set the api_endpoint if you use a location other than 'us'.

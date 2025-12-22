@@ -6,10 +6,11 @@ This guide provides step-by-step instructions for setting up the **FIH Rules Eng
 
 Set your active project and region:
 ```bash
-export PROJECT_ID="your-project-id"
+export PROJECT_ID="fih-rules-engine"
 export REGION="europe-west1"
 
 gcloud config set project $PROJECT_ID
+gcloud auth application-default set-quota-project $PROJECT_ID
 ```
 
 ## 2. Enable APIs
@@ -35,21 +36,30 @@ gsutil mb -l $REGION gs://fih-rag-staging-$PROJECT_ID
 ```
 
 ### Create Cloud SQL Instance
-Create a PostgreSQL 15 instance (ensure `pgvector` compatibility):
+Create a PostgreSQL 15 instance:
 ```bash
 gcloud sql instances create fih-rag-db \
     --database-version=POSTGRES_15 \
     --tier=db-custom-1-3840 \
     --region=$REGION \
     --storage-type=SSD
+
+# Set the password (avoid special characters that break shell commands, e.g. '!')
+gcloud sql users set-password postgres \
+    --instance=fih-rag-db \
+    --password="<YOUR_DB_PASSWORD>"
+
+# IMPORTANT: Create the application database
+gcloud sql databases create hockey_db --instance=fih-rag-db
 ```
 
 ## 4. Document AI Processor
 
-You must create a **Custom Document Extractor** (or General Processor) in the Google Cloud Console:
-1. Go to **Document AI** > **Processors**.
-2. Click **Create Processor** and select **Document OCR** (or a specialized one).
-3. Copy the **Processor ID** for your `config.py` or environment variables.
+Provision the OCR processor using the automation script:
+```bash
+python3 scripts/setup_docai_processor.py
+```
+Copy the `PROCESSOR_ID` from the output for the deployment step below.
 
 ## 5. IAM Permissions (Security)
 
@@ -60,77 +70,51 @@ gcloud iam service-accounts create fih-rag-sa \
 ```
 
 ### Grant Roles
-Assign the necessary permissions to the service account:
 ```bash
-# Vertex AI for Gemini & Embeddings
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-    --member="serviceAccount:fih-rag-sa@$PROJECT_ID.iam.gserviceaccount.com" \
-    --role="roles/aiplatform.user"
-
-# Document AI for parsing
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-    --member="serviceAccount:fih-rag-sa@$PROJECT_ID.iam.gserviceaccount.com" \
-    --role="roles/documentai.apiUser"
-
-# Storage access for ingestion shards
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-    --member="serviceAccount:fih-rag-sa@$PROJECT_ID.iam.gserviceaccount.com" \
-    --role="roles/storage.objectUser"
-
-# Cloud SQL connection
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-    --member="serviceAccount:fih-rag-sa@$PROJECT_ID.iam.gserviceaccount.com" \
-    --role="roles/cloudsql.client"
+# Vertex AI, Document AI, Storage, and Cloud SQL
+for ROLE in aiplatform.user documentai.apiUser storage.objectUser cloudsql.client; do
+    gcloud projects add-iam-policy-binding $PROJECT_ID \
+        --member="serviceAccount:fih-rag-sa@$PROJECT_ID.iam.gserviceaccount.com" \
+        --role="roles/$ROLE"
+done
 ```
 
 ## 6. Deployment
 
-### 1. Public API
+> [!IMPORTANT]
+> Both services require at least **2GiB of memory** and **1 CPU** to handle the heavy Python RAG stack and PDF processing.
+
+### 1. Public API (Standard Dockerfile)
 ```bash
 gcloud run deploy fih-rag-api \
     --source . \
     --region $REGION \
+    --memory 2Gi \
+    --cpu 1 \
     --service-account="fih-rag-sa@$PROJECT_ID.iam.gserviceaccount.com" \
     --allow-unauthenticated \
-    --set-env-vars "GCP_PROJECT_ID=$PROJECT_ID,CLOUDSQL_INSTANCE=fih-rag-db,DB_USER=postgres,DB_PASS=your-password,API_KEY=your-secret"
+    --set-env-vars "GCP_PROJECT_ID=$PROJECT_ID,CLOUDSQL_INSTANCE=fih-rag-db,DB_USER=postgres,DB_PASS=YourStrongPassword2025,API_KEY=your-secret,DOCAI_PROCESSOR_ID=your-processor-id,GCS_BUCKET_NAME=fih-rag-staging-$PROJECT_ID"
 ```
 
-### 2. Admin Dashboard (Recommended with IAP)
+### 2. Admin Dashboard (Custom Dockerfile via Cloud Build)
+Because `gcloud run deploy --source` doesn't support custom Dockerfile names, we use Cloud Build:
+
 ```bash
+# 1. Build the image
+gcloud builds submit . --config cloudbuild.admin.yaml
+
+# 2. Deploy from the image
 gcloud run deploy fih-rag-admin \
-    --source . \
-    --dockerfile Dockerfile.admin \
+    --image gcr.io/$PROJECT_ID/admin-app:latest \
     --region $REGION \
+    --memory 2Gi \
+    --cpu 1 \
     --service-account="fih-rag-sa@$PROJECT_ID.iam.gserviceaccount.com" \
     --no-allow-unauthenticated \
-    --set-env-vars "GCP_PROJECT_ID=$PROJECT_ID,CLOUDSQL_INSTANCE=fih-rag-db,DB_USER=postgres,DB_PASS=your-password,API_KEY=your-secret"
+    --set-env-vars "GCP_PROJECT_ID=$PROJECT_ID,CLOUDSQL_INSTANCE=fih-rag-db,DB_USER=postgres,DB_PASS=<YOUR_DB_PASSWORD>,API_KEY=<YOUR_API_KEY>,DOCAI_PROCESSOR_ID=your-processor-id,GCS_BUCKET_NAME=fih-rag-staging-$PROJECT_ID"
 ```
 
-## 7. Manual Build & Deploy (Artifact Registry)
-
-If you prefer to build the image once and deploy it multiple times (or to multiple services), use **Cloud Build** and **Artifact Registry**.
-
-### Create a Repository
-```bash
-gcloud artifacts repositories create fih-repo \
-    --repository-format=docker \
-    --location=$REGION
-```
-
-### Build the Admin Image
-```bash
-gcloud builds submit . \
-    --tag $REGION-docker.pkg.dev/$PROJECT_ID/fih-repo/admin-app:latest \
-    --dockerfile Dockerfile.admin
-```
-
-### Deploy from the Image
-```bash
-gcloud run deploy fih-rag-admin \
-    --image $REGION-docker.pkg.dev/$PROJECT_ID/fih-repo/admin-app:latest \
-    --region $REGION \
-    --service-account="fih-rag-sa@$PROJECT_ID.iam.gserviceaccount.com"
-```
+---
 
 > [!TIP]
-> This approach is preferred for Production environments as it ensures that the exact same binary is deployed across different stages (staging/prod) without rebuilding from source.
+> Use `gcloud run services update --update-env-vars` if you only need to change a single variable without overwriting the entire environment.

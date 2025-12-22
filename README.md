@@ -131,17 +131,11 @@ Maintenance targets:
 
 ## ☁️ Deployment (Google Cloud Run)
 
-### 1. Public API
-Builds and deploys the headless API container.
-```bash
-gcloud run deploy fih-rules-api --source . --region europe-west1
-```
+The project is designed for serverless deployment on **Google Cloud Run**. 
 
-### 2. Admin Dashboard
-Builds the secure internal dashboard.
-```bash
-gcloud run deploy fih-rules-admin --source . --dockerfile Dockerfile.admin --region europe-west1
-```
+Detailed, step-by-step instructions for project initialization, API activation, and final deployment (including custom Cloud Build configurations) can be found in the:
+
+👉 **[Infrastructure Setup Guide (deployment.md)](file:///home/bavobbr/dev/fih-rules-engine/deployment.md)**
 
 ---
 

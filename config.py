@@ -16,15 +16,15 @@ if load_dotenv:
     load_dotenv()
 
 # Google Cloud & Infra
-PROJECT_ID = os.getenv("GCP_PROJECT_ID", "langchain-poc-479114")
+PROJECT_ID = os.getenv("GCP_PROJECT_ID", "fih-rules-engine")
 REGION = os.getenv("GCP_REGION", "europe-west1")
 
 # Document AI 
-DOCAI_PROCESSOR_ID = os.getenv("DOCAI_PROCESSOR_ID", "2699879b692a67f")
+DOCAI_PROCESSOR_ID = os.getenv("DOCAI_PROCESSOR_ID", "f232912f58695fe9")
 DOCAI_LOCATION = os.getenv("DOCAI_LOCATION", "eu")
 
 # Staging bucket for Document AI (Batch Processing)
-GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", "fih-rag-staging-langchain-poc-479114")
+GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", "fih-rag-staging-fih-rules-engine")
 
 # Database (Cloud SQL Postgres)
 INSTANCE_NAME = os.getenv("CLOUDSQL_INSTANCE", "fih-rag-db")

@@ -49,6 +49,16 @@ The project interacts with the following GCP services:
 - **Ingestion Preview**: `make ingest-preview`
 - **Run Tests**: `make test`
 
+## Deployment & Infrastructure Preferences
+
+- **Build Pipeline**: Prefer **Cloud Build** for custom Dockerfiles. Standard `gcloud run deploy --source` only supports `Dockerfile`.
+- **Compute Resources**: Python RAG services require **2GiB Memory** and **1 CPU** minimum to avoid OOM errors during ingestion and reasoning.
+- **Environment Variables**: Use `--update-env-vars` for incremental updates. Avoid `--set-env-vars` unless a full reset is intended, as it overwrites existing variables.
+- **Database Setup**: The application database `hockey_db` must exist on the Cloud SQL instance before the engine can initialize.
+- **Security**:
+    - Avoid special characters like `!` in passwords passed via shell to prevent expansion issues.
+    - `GCP_PROJECT_ID` must be explicitly provided to distinguish between the runtime environment and the AI platform project.
+
 ## Coding Style
 - Python 3.10+, 4-space indentation, PEP 8.
 - Use `black` and `ruff` for formatting and linting (`make fmt`, `make lint`).
@@ -57,4 +67,4 @@ The project interacts with the following GCP services:
 ## Deployment
 The project builds two separate container images:
 - `app-public`: Contains `api.py` and the core RAG engine logic.
-- `app-admin`: Contains `Query.py`, `evals/`, and admin utilities.
+- `app-admin`: Contains `Query.py`, `evals/`, and admin utilities (built via `cloudbuild.admin.yaml`).
