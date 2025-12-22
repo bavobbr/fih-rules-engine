@@ -111,7 +111,7 @@ class FIHRulesEngine:
         for d in docs:
             meta = d.metadata
             # Fallback values if metadata is empty/legacy
-            heading = meta.get("heading", "Reference")
+            rule = meta.get("rule", "Reference")
             chapter = meta.get("chapter", "")
             section = meta.get("section", "")
             
@@ -120,7 +120,7 @@ class FIHRulesEngine:
             source_file = meta.get("source_file", "unknown")
             page_num = meta.get("page", "?")
             
-            context_string = f"[{heading}] [Source: {source_file} p.{page_num}]"
+            context_string = f"[{rule}] [Source: {source_file} p.{page_num}]"
             if chapter or section:
                 context_string += f" (Context: {chapter} > {section})"
             
@@ -169,7 +169,7 @@ class FIHRulesEngine:
             for i, doc in enumerate(docs):
                 records.append(discoveryengine.RankingRecord(
                     id=str(i),
-                    title=doc.metadata.get("heading", ""),
+                    title=doc.metadata.get("rule", ""),
                     content=doc.page_content
                 ))
             

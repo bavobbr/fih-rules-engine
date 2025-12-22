@@ -58,9 +58,9 @@ def test_query_flow(mock_engine):
     mock_engine._route_query = MagicMock(return_value="indoor")
     mock_engine.embeddings.embed_query.return_value = [0.1, 0.2]
     
-    mock_engine.db.search.return_value = [
-        {"content": "Rule 1", "variant": "indoor", "metadata": {"heading": "1.1"}},
-        {"content": "Rule 2", "variant": "indoor", "metadata": {"heading": "1.2"}}
+    mock_engine.db.search_hybrid.return_value = [
+        {"content": "Rule 1", "variant": "indoor", "metadata": {"rule": "1.1"}, "hybrid_score": 0.5},
+        {"content": "Rule 2", "variant": "indoor", "metadata": {"rule": "1.2"}, "hybrid_score": 0.4}
     ]
     
     mock_engine.llm.invoke.return_value = "Final Answer"
@@ -71,5 +71,5 @@ def test_query_flow(mock_engine):
     # Validate
     assert response["answer"] == "Final Answer"
     assert response["variant"] == "indoor"
-    mock_engine.db.search.assert_called()
+    mock_engine.db.search_hybrid.assert_called()
     assert len(response["source_docs"]) == 2

@@ -10,7 +10,7 @@ class DocumentAILayoutMixin:
         """Hybrid Chunker: Iterates visually sorted blocks with Hierarchical Context."""
         chunks = []
         current_chunk_text = ""
-        current_heading = "Front Matter"
+        current_rule = "Front Matter"
         current_chapter = "General"
         current_section = "General"
         
@@ -64,7 +64,7 @@ class DocumentAILayoutMixin:
                                     page_content=current_chunk_text.strip(),
                                     metadata={
                                         "source": "PDF (DocAI-Layout)", 
-                                        "heading": current_heading, 
+                                        "rule": current_rule, 
                                         "variant": variant,
                                         "chapter": current_chapter,
                                         "section": current_section,
@@ -92,7 +92,7 @@ class DocumentAILayoutMixin:
                                 page_content=current_chunk_text.strip(),
                                 metadata={
                                     "source": "PDF (DocAI-Layout)", 
-                                    "heading": current_heading, 
+                                    "rule": current_rule, 
                                     "variant": variant,
                                     "chapter": current_chapter,
                                     "section": current_section,
@@ -114,7 +114,7 @@ class DocumentAILayoutMixin:
                                 page_content=current_chunk_text.strip(),
                                 metadata={
                                     "source": "PDF (DocAI-Layout)", 
-                                    "heading": current_heading, 
+                                    "rule": current_rule, 
                                     "variant": variant,
                                     "chapter": current_chapter,
                                     "section": current_section,
@@ -133,14 +133,14 @@ class DocumentAILayoutMixin:
                     # Group 3: Specific rule number parts...
                     match_header = header_pattern.match(block_text)
                     if match_header:
-                        new_heading = match_header.group(1) # Extract just "Rule 9.12" or "1.1"
+                        new_rule = match_header.group(1) # Extract just "Rule 9.12" or "1.1"
                         
                         if len(current_chunk_text) > 20: 
                             chunks.append(Document(
                                 page_content=current_chunk_text.strip(),
                                 metadata={
                                     "source": "PDF (DocAI-Layout)", 
-                                    "heading": current_heading, 
+                                    "rule": current_rule, 
                                     "variant": variant,
                                     "chapter": current_chapter,
                                     "section": current_section,
@@ -148,7 +148,7 @@ class DocumentAILayoutMixin:
                                 }
                             ))
                         
-                        current_heading = new_heading
+                        current_rule = new_rule
                         # If the block contains text after the number ("1.1 Umpiring..."), chunk starts here.
                         # We don't "consume" the whole block as a header only. We let it be part of content.
                         current_chunk_text = block_text + " "
@@ -168,7 +168,7 @@ class DocumentAILayoutMixin:
                 page_content=current_chunk_text.strip(),
                 metadata={
                     "source": "PDF (DocAI-Layout)", 
-                    "heading": current_heading, 
+                    "rule": current_rule, 
                     "variant": variant,
                     "chapter": current_chapter,
                     "section": current_section,

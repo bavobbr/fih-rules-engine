@@ -53,7 +53,7 @@ sequenceDiagram
     participant DocAI as Document AI
     participant DB as Cloud SQL (Postgres)
 
-    Admin->>Engine: ingest_pdf(file)
+    Admin->>Engine: ingest_pdf(file, variant)
     Engine->>Vertex: analyze_structure(pdf)
     Vertex-->>Engine: Structural Map
     Engine->>Engine: Filter Relevant Pages
@@ -62,10 +62,12 @@ sequenceDiagram
     DocAI-->>GCS: JSON Shards
     GCS-->>Engine: Fetch Results
     Engine->>Engine: Semantic Chunking & Summarization
+    Note over Engine, DB: Idempotent Variant Overwrite
     Engine->>DB: delete_variant(variant)
     Engine->>Vertex: embed_documents(chunks)
     Vertex-->>Engine: Vectors
-    Engine->>DB: insert_batch(vectors)
+    Engine->>DB: insert_batch(vectors, variant)
+    Note right of DB: Single Table Isolation
     Engine-->>Admin: Success (Chunk Count)
 ```
 
@@ -99,6 +101,28 @@ sequenceDiagram
     Engine-->>API: Result Object
     API-->>Client: 200 OK {answer, sources}
 ```
+
+---
+
+## 🔍 Hybrid Search Architecture
+
+The engine uses a sophisticated two-stage retrieval process powered by advanced PostgreSQL features to ensure both semantic breadth and keyword precision.
+
+### 1. The PostgreSQL Multi-Lens System
+Every document chunk is indexed twice within a single row:
+*   **Semantic Lens (`pgvector`)**: Stores high-dimensional embeddings. We use the `<=>` cosine distance operator for lightning-fast similarity lookups based on meaning.
+*   **Keyword Lens (`tsvector`)**: Stores a pre-computed lexicon of the content and metadata (rules, rule numbers). We use a **GIN Index** to make keyword lookups near-instantaneous.
+
+### 2. Reciprocal Rank Fusion (RRF)
+To combine these two different types of scores (vector distances vs. keyword ranks), we use the **Reciprocal Rank Fusion** algorithm. 
+
+Inside a single SQL transaction using **Common Table Expressions (CTEs)**:
+1.  **Recall**: Two parallel searches are performed (Vector and Full-Text).
+2.  **Scoring**: Each result is given a score based on its rank: `1.0 / (rank + 60)`.
+3.  **Fusion**: Results appearing in both lists get their scores summed, naturally surface chunks that are both semantically relevant and contain exact keyword matches.
+
+### 3. Intelligent Reranking
+Finally, the **Vertex AI Ranking API** acts as a cross-encoder judge. It takes the top candidates from the hybrid search and performs a deep analysis of the relationship between the query and the document content, filtering the most vital context for the LLM.
 
 ---
 

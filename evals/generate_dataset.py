@@ -43,9 +43,9 @@ def generate_qa_pairs(limit: int = 10, variant: str = "indoor") -> List[Dict]:
             FROM {config.TABLE_NAME} 
             WHERE variant = :variant 
             AND (
-                -- Match headings like "9.12", "Rule 9.1", "Rule 10"
+                -- Match rules like "9.12", "Rule 9.1", "Rule 10"
                 -- Postgres regex for "Starts with Rule<space>Digit OR Digit.Digit"
-                metadata->>'heading' ~* '^(Rule\s+[0-9]+|[0-9]+\.[0-9]+)'
+                metadata->>'rule' ~* '^(Rule\s+[0-9]+|[0-9]+\.[0-9]+)'
             )
             ORDER BY RANDOM() 
             LIMIT :limit
@@ -60,8 +60,8 @@ def generate_qa_pairs(limit: int = 10, variant: str = "indoor") -> List[Dict]:
         content = row[0]
         metadata = row[1]
         
-        # Heading context if available
-        heading = metadata.get('heading', 'Rule')
+        # Rule context if available
+        rule = metadata.get('rule', 'Rule')
         
         prompt = f"""
         You are an expert examiner for Field Hockey Rules.
@@ -90,11 +90,14 @@ def generate_qa_pairs(limit: int = 10, variant: str = "indoor") -> List[Dict]:
                 "question": qa.get("question"),
                 "ground_truth": qa.get("answer"),
                 "source_text": content,
-                "context_guidance": f"Derived from {heading}",
+                "context_guidance": f"Derived from {rule}",
                 "variant": variant
             }
             qa_dataset.append(entry)
             print(f"Generated: {entry['question']}")
+            
+            # Rate limit politeness
+            time.sleep(1)
             
         except Exception as e:
             logger.error(f"Failed to generate QA for chunk: {e}")

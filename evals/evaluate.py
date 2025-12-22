@@ -136,15 +136,17 @@ class BotEvaluator:
         logger.info("Running RAGAS evaluation (this takes a moment)...")
         ragas_dataset = Dataset.from_dict(ragas_data)
         
-        # Need to wrap VertexAI for Ragas compatibility if needed, 
-        # but usually passing the langchain object works for newer ragas versions.
         # Ragas uses 'llm' and 'embeddings' args.
+        from ragas.run_config import RunConfig
+        run_config = RunConfig(max_workers=2, timeout=60)
+        
         try:
             ragas_scores = evaluate(
                 ragas_dataset,
                 metrics=[faithfulness, answer_relevancy, context_precision, context_recall],
                 llm=self.judge_llm,
-                embeddings=self.embeddings
+                embeddings=self.embeddings,
+                run_config=run_config
             )
             ragas_result_mean = ragas_scores.to_pandas().mean(numeric_only=True).to_dict()
             ragas_result_df = ragas_scores.to_pandas()

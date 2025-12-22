@@ -63,11 +63,11 @@ class TestChunking(DocumentAILayoutMixin):
         ], "test_variant")
         
         assert len(chunks) == 2
-        assert "9.12" in chunks[0].metadata['heading']
+        assert "9.12" in chunks[0].metadata['rule']
         assert "A penalty stroke" in chunks[0].page_content
         
         # Check rule splitting
-        assert "9.13" in chunks[1].metadata['heading']
+        assert "9.13" in chunks[1].metadata['rule']
         assert "The ball is placed" in chunks[1].page_content
 
     def test_page_number_exclusion(self):

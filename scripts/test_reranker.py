@@ -26,7 +26,7 @@ def test_reranking():
     
     print("\nSource Documents Order:")
     for i, doc in enumerate(result['source_docs']):
-        print(f"{i+1}. [{doc.metadata.get('heading', 'No Heading')}] {doc.metadata.get('source_file', 'No Source')} p.{doc.metadata.get('page', '?')}")
+        print(f"{i+1}. [{doc.metadata.get('rule', 'No Rule')}] {doc.metadata.get('source_file', 'No Source')} p.{doc.metadata.get('page', '?')}")
         # print(f"   Content snippet: {doc.page_content[:100]}...")
 
 if __name__ == "__main__":

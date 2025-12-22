@@ -94,9 +94,9 @@ class PostgresVectorDB:
             
         data = []
         for content, vector, meta in zip(contents, vectors, metadatas):
-            # Build search string from content + key metadata (heading, section)
+            # Build search string from content + key metadata (rule, section)
             search_parts = [content]
-            if meta.get("heading"): search_parts.append(meta.get("heading"))
+            if meta.get("rule"): search_parts.append(meta.get("rule"))
             if meta.get("section"): search_parts.append(meta.get("section"))
             search_text = " ".join(search_parts)
             

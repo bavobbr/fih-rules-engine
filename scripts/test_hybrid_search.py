@@ -31,7 +31,7 @@ def test_hybrid_search():
         
         print("\nTop 3 Source Documents:")
         for i, doc in enumerate(result['source_docs'][:3]):
-            print(f"{i+1}. [{doc.metadata.get('heading', 'No Heading')}] p.{doc.metadata.get('page', '?')} - Score: {getattr(doc.metadata, 'hybrid_score', 'N/A')}")
+            print(f"{i+1}. [{doc.metadata.get('rule', 'No Rule')}] p.{doc.metadata.get('page', '?')} - Score: {getattr(doc.metadata, 'hybrid_score', 'N/A')}")
             # Snippet of content
             content_snippet = doc.page_content[:100].replace('\n', ' ')
             print(f"   Snippet: {content_snippet}...")
