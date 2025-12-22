@@ -16,8 +16,8 @@ class FIHRulesEngine:
     """High-level interface to embeddings, LLM, and vector DB."""
 
     def __init__(self):
-        # Defer import of heavy Vertex AI libraries to instantiation time (reduces startup latency)
         from langchain_google_vertexai import VertexAIEmbeddings, VertexAI
+        from google.cloud import discoveryengine_v1 as discoveryengine
         
         # Models
         self.embeddings = VertexAIEmbeddings(
@@ -77,8 +77,11 @@ class FIHRulesEngine:
     # Querying
     def query(self, user_input, history=[]):
         """Answer a user question using contextualization, routing, and RAG."""
+        logger.info(f"Query: {user_input}")
+        
         # Reformulate & route
         standalone_query = self._contextualize_query(history, user_input)
+        logger.info(f"Standalone Query: {standalone_query}")
         
         detected_variant = self._route_query(standalone_query)
         if detected_variant not in config.VARIANTS: 
@@ -96,6 +99,12 @@ class FIHRulesEngine:
         
         # Convert DB results back to LangChain Documents for consistency
         docs = [Document(page_content=r["content"], metadata=r["metadata"]) for r in results]
+        
+        # Rerank
+        if docs:
+            docs = self._rerank_documents(clean_query, docs)
+            # Limit to RANKING_TOP_N
+            docs = docs[:config.RANKING_TOP_N]
         
         # Synthesize answer
         context_pieces = []
@@ -138,6 +147,7 @@ class FIHRulesEngine:
         {standalone_query}
         """
         answer = self.llm.invoke(full_prompt)
+        logger.info(f"Received AI response ({len(answer)} chars)")
         
         return {
             "answer": answer,
@@ -145,6 +155,46 @@ class FIHRulesEngine:
             "variant": detected_variant,
             "source_docs": docs
         }
+
+    def _rerank_documents(self, query, docs):
+        """Rerank documents using Vertex AI Ranking API."""
+        try:
+            from google.cloud import discoveryengine_v1 as discoveryengine
+            
+            client = discoveryengine.RankServiceClient()
+            
+            ranking_config = f"projects/{config.PROJECT_ID}/locations/global/rankingConfigs/default_ranking_config"
+            
+            records = []
+            for i, doc in enumerate(docs):
+                records.append(discoveryengine.RankingRecord(
+                    id=str(i),
+                    title=doc.metadata.get("heading", ""),
+                    content=doc.page_content
+                ))
+            
+            request = discoveryengine.RankRequest(
+                ranking_config=ranking_config,
+                model=config.RANKING_MODEL,
+                top_n=config.RANKING_TOP_N,
+                query=query,
+                records=records,
+            )
+            
+            response = client.rank(request=request)
+            
+            # Reorder docs based on ranking results
+            new_docs = []
+            for record in response.records:
+                idx = int(record.id)
+                new_docs.append(docs[idx])
+            
+            logger.info(f"Reranked {len(docs)} documents down to {len(new_docs)}")
+            return new_docs
+            
+        except Exception as e:
+            logger.error(f"Error during reranking: {e}. Falling back to original retrieval.")
+            return docs
 
     def _contextualize_query(self, history, query):
         """Rewrite the latest user message as a standalone query."""
