@@ -22,7 +22,8 @@ The system follows a **Dual-Core Architecture**, separating the public-facing AP
 | **Public API** | **FastAPI** | Headless RAG service (REST) used by external clients. |
 | **Admin Dashboard** | **Streamlit** | Internal tool for rule ingestion and metrics. |
 | **Ingestion** | **Vertex AI + DocAI** | Structural parsing and AI-driven enrichment. |
-| **Vector DB** | **Cloud SQL (Postgres)** | High-performance vector storage via `pgvector`. |
+| **Hybrid Search** | **Postgres (FTS + pgvector)** | Multi-stage retrieval combining semantic and keyword search via RRF. |
+| **Reranker** | **Vertex AI Ranking** | Cross-encoder reranking to optimize context relevance. |
 | **Reasoning** | **Gemini 2.0 Flash Lite** | State-of-the-art LLM for synthesis and reasoning. |
 
 ### 🛠️ The Architectural Stack
@@ -30,7 +31,9 @@ The system follows a **Dual-Core Architecture**, separating the public-facing AP
 The engine is built on a "Lean-Core" principle, minimizing long-running state while leveraging Google's powerful AI infrastructure:
 
 *   **Serverless Compute**: **Google Cloud Run** hosts both the API and Admin containers. It scales dynamically, ensuring costs only scale with usage.
-*   **Vectorized Storage**: **Cloud SQL (PostgreSQL)** with `pgvector` acts as the long-term memory, storing rules as high-dimensional vectors for semantic retrieval.
+*   **Vectorized & Full-Text Storage**: **Cloud SQL (PostgreSQL)** serves a dual purpose: semantic search via `pgvector` and exact keyword matching via PostgreSQL's Full Text Search (FTS).
+*   **Hybrid Retrieval**: The system uses **Reciprocal Rank Fusion (RRF)** to combine vector similarity with keyword relevance, ensuring pinpoint accuracy for technical terms and rule numbers.
+*   **Intelligent Reranking**: **Vertex AI Ranking API** acts as a cross-encoder, re-ordering retrieved documents to ensure the most relevant context is prioritized for the LLM.
 *   **AI Orchestration**: **Vertex AI** powers the entire reasoning loop, from structural document analysis and embedding generation to the final context-aware answer synthesis.
 *   **Infrastructure-as-a-Service**: **Document AI** and **Cloud Storage** are used as high-fidelity tools during the administrative ingestion phase to transform raw PDFs into structured knowledge.
 
@@ -75,6 +78,7 @@ sequenceDiagram
     participant API as Public API (FastAPI)
     participant Engine as RAG Engine
     participant Vertex as Vertex AI (Gemini)
+    participant Rank as Vertex AI Ranking
     participant DB as Cloud SQL (Postgres)
 
     Client->>API: POST /chat {query}
@@ -85,8 +89,11 @@ sequenceDiagram
     Vertex-->>Engine: Variant (e.g. "indoor")
     Engine->>Vertex: embed_query(clean_question)
     Vertex-->>Engine: Vector
-    Engine->>DB: search(vector, variant)
-    DB-->>Engine: Context Chunks
+    Engine->>DB: search_hybrid(question, vector)
+    Note over DB: Semantic (pgvector) + Keyword (FTS)
+    DB-->>Engine: Ranked Candidates (RRF)
+    Engine->>Rank: rank(question, candidates)
+    Rank-->>Engine: Re-ordered Top Context
     Engine->>Vertex: Generate Answer (Context + Question)
     Vertex-->>Engine: Expert Response
     Engine-->>API: Result Object

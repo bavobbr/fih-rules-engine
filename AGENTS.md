@@ -24,9 +24,10 @@ The project interacts with the following GCP services:
 | Category | Service | Technical Role |
 | :--- | :--- | :--- |
 | **Compute** | **Cloud Run** | Managed serverless hosting for `fih-rules-api` and `fih-rules-admin`. |
-| **Storage** | **Cloud SQL** | Postgres instance with `pgvector` for localized semantic search. |
+| **Storage** | **Cloud SQL** | Postgres with `pgvector` for semantic search and FTS for keyword search. |
 | **AI (LLM)** | **Vertex AI** | Gemini 2.0 Flash Lite for reasoning, routing, and synthesis. |
-| **AI (Embeds)**| **Vertex AI** | `text-multilingual-embedding-002` for generating vector representations. |
+| **AI (Embeds)**| **Vertex AI** | `text-embedding-004` for generating vector representations. |
+| **Ranking** | **Discovery Engine** | Vertex AI Ranking API for cross-encoder reranking. |
 | **Parsing** | **Document AI** | Layout analysis for accurate PDF-to-chunk transformation. |
 | **Storage** | **Cloud Storage** | Persistent bucket for DocAI processing (configured via `GCS_BUCKET_NAME`). |
 | **Build** | **Cloud Build** | Pipeline for building images from source. |

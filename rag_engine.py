@@ -95,7 +95,7 @@ class FIHRulesEngine:
         # Embed query
         query_vector = self.embeddings.embed_query(clean_query)
         # Retrieve
-        results = self.db.search(query_vector, detected_variant, k=config.RETRIEVAL_K)
+        results = self.db.search_hybrid(clean_query, query_vector, detected_variant, k=config.RETRIEVAL_K)
         
         # Convert DB results back to LangChain Documents for consistency
         docs = [Document(page_content=r["content"], metadata=r["metadata"]) for r in results]

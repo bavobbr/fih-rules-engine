@@ -71,8 +71,8 @@ gcloud iam service-accounts create fih-rag-sa \
 
 ### Grant Roles
 ```bash
-# Vertex AI, Document AI, Storage, and Cloud SQL
-for ROLE in aiplatform.user documentai.apiUser storage.objectUser cloudsql.client; do
+# Vertex AI, Document AI, Storage, Cloud SQL, and Discovery Engine (Ranking)
+for ROLE in aiplatform.user documentai.apiUser storage.objectUser cloudsql.client discoveryengine.viewer; do
     gcloud projects add-iam-policy-binding $PROJECT_ID \
         --member="serviceAccount:fih-rag-sa@$PROJECT_ID.iam.gserviceaccount.com" \
         --role="roles/$ROLE"
