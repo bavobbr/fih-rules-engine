@@ -111,7 +111,7 @@ class FIHRulesEngine:
         for d in docs:
             meta = d.metadata
             # Fallback values if metadata is empty/legacy
-            rule = meta.get("rule", "Reference")
+            rule = meta.get("rule", "")
             chapter = meta.get("chapter", "")
             section = meta.get("section", "")
             
@@ -120,11 +120,13 @@ class FIHRulesEngine:
             source_file = meta.get("source_file", "unknown")
             page_num = meta.get("page", "?")
             
-            context_string = f"[{rule}] [Source: {source_file} p.{page_num}]"
+            context_string = f"[Source: {source_file} p.{page_num}]"
+            if rule:
+                context_string += f" [Rule: {rule}]"
             if chapter or section:
-                context_string += f" (Context: {chapter} > {section})"
+                context_string += f" [Chapter: {chapter} > {section}]"
             
-            context_pieces.append(f"{context_string}\n{d.page_content}")
+            context_pieces.append(f"---Snippet Start---\n{context_string}\n{d.page_content}\n---Snippet End---")
 
         context_text = "\n\n".join(context_pieces)
         
@@ -137,15 +139,29 @@ class FIHRulesEngine:
             }
 
         full_prompt = f"""
-        Expert FIH international Field Hockey Umpire for {detected_variant.upper()}. 
-        Answer based on Context. Cite Rules.
-        
-        CONTEXT:
-        {context_text}
-        
-        QUESTION:
-        {standalone_query}
-        """
+You are an expert FIH international Field Hockey Umpire for {detected_variant}.
+You are provided with a set of rules for {detected_variant} hockey and their metadata fields source, page, rule, chapter, section where available.
+
+STRUCTURE YOUR RESPONSE:
+- Start with a human-friendly, summary of the answer as a plain paragraph.
+- Follow with a **markdown bulleted list** of technical details derived ONLY from the provided CONTEXT.
+- Do NOT use labels like "Summary", "Details", "1.", or "2." to demarcate these sections.
+
+CITATION RULES:
+- For each bullet point in the technical details, try to cite the rule or page source. Prefer rules over pages where available. You can use both.
+    - **If the rule for that point is a number** (e.g., "9.1", "12"), use: **(rule <rule>)**
+    - **If the rule for that point is missing, use: **(page <page>)**
+    - Use double asterisks for citations as shown above.
+
+CONTEXT:
+{context_text}
+
+QUESTION:
+{standalone_query}
+
+ANSWER:
+"""
+        # logger.info(f"Full Prompt: {full_prompt}")
         answer = self.llm.invoke(full_prompt)
         logger.info(f"Received AI response ({len(answer)} chars)")
         

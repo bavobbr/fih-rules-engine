@@ -35,7 +35,7 @@ DB_PASS = os.getenv("DB_PASS")  # Required; do not set a default here
 
 # Model Config
 EMBEDDING_MODEL = "text-embedding-004"
-LLM_MODEL = "gemini-2.0-flash-lite"
+LLM_MODEL = "gemini-2.5-flash-lite"
 RANKING_MODEL = "semantic-ranker-512@latest"
 RETRIEVAL_K = 15
 RANKING_TOP_N = 10

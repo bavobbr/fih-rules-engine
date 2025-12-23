@@ -6,24 +6,20 @@ from langchain_core.documents import Document
 class DocumentAILayoutMixin:
     """Shared logic for visual/structural chunking of Document AI results."""
 
-    def _layout_chunking(self, docai_shards: List[documentai.Document], variant: str) -> List[Document]:
+    def _layout_chunking(self, docai_shards: List[documentai.Document], variant: str, page_config: dict = None) -> List[Document]:
         """Hybrid Chunker: Iterates visually sorted blocks with Hierarchical Context."""
         chunks = []
         current_chunk_text = ""
         current_rule = "Front Matter"
         current_chapter = "General"
         current_section = "General"
+        current_content_type = "body"
         
         # Regex Patterns
-        # 1. Rule Header: "9.12", "Rule 4", "10.1" - ALLOW trailing text (removed $)
-        # captured groups: 1=FullNumber, 2=OptionalPrefix, 3=Major, 4=Minor
+        # ... (same patterns)
         header_pattern = re.compile(r'^((Rule\s+)?([1-9]|1[0-9])(\.\d+)+|Rule\s+\d+)', re.IGNORECASE)
-        # 2. Section Header: "1 Field of play" (Digit + Space + Text)
         section_pattern = re.compile(r'^\d+\s+[A-Za-z].*')
-        # 3. Chapter Header: "PLAYING THE GAME" (All Caps, min length 4 to avoid short noise)
         chapter_pattern = re.compile(r'^[A-Z\s]{4,}$')
-        
-        # 4. Standalone Section Number (e.g. "1")
         section_num_pattern = re.compile(r'^\d+$')
         
         pending_section_num = None
@@ -32,6 +28,28 @@ class DocumentAILayoutMixin:
             if not shard.pages: continue
             
             for page in shard.pages:
+                # Get page-specific config (like content_type)
+                p_info = (page_config or {}).get(page.page_number, {})
+                page_content_type = p_info.get("content_type", "body")
+                
+                # If content type changes between pages, flush current chunk
+                if page_content_type != current_content_type:
+                    if current_chunk_text.strip():
+                        chunks.append(Document(
+                            page_content=current_chunk_text.strip(),
+                            metadata={
+                                "source": "PDF (DocAI-Layout)", 
+                                "rule": current_rule if current_content_type == "body" else "N/A", 
+                                "variant": variant,
+                                "chapter": current_chapter,
+                                "section": current_section if current_content_type == "body" else "N/A",
+                                "page": page.page_number - 1 if page.page_number > 1 else 1,
+                                "content_type": current_content_type
+                            }
+                        ))
+                        current_chunk_text = ""
+                    current_content_type = page_content_type
+
                 # 1. Extract Blocks
                 raw_blocks = page.blocks
                 
@@ -64,11 +82,12 @@ class DocumentAILayoutMixin:
                                     page_content=current_chunk_text.strip(),
                                     metadata={
                                         "source": "PDF (DocAI-Layout)", 
-                                        "rule": current_rule, 
+                                        "rule": current_rule if current_content_type == "body" else "N/A", 
                                         "variant": variant,
                                         "chapter": current_chapter,
-                                        "section": current_section,
-                                        "page": page.page_number
+                                        "section": current_section if current_content_type == "body" else "N/A",
+                                        "page": page.page_number,
+                                        "content_type": current_content_type
                                     }
                                 ))
                                 current_chunk_text = ""
@@ -92,21 +111,21 @@ class DocumentAILayoutMixin:
                                 page_content=current_chunk_text.strip(),
                                 metadata={
                                     "source": "PDF (DocAI-Layout)", 
-                                    "rule": current_rule, 
+                                    "rule": current_rule if current_content_type == "body" else "N/A", 
                                     "variant": variant,
                                     "chapter": current_chapter,
-                                    "section": current_section,
-                                    "page": page.page_number
+                                    "section": current_section if current_content_type == "body" else "N/A",
+                                    "page": page.page_number,
+                                    "content_type": current_content_type
                                 }
                             ))
                             current_chunk_text = ""
                         
                         current_chapter = block_text
+                        # RESET rule context on new chapter to avoid "caching" old rules
+                        current_rule = "General" 
                         continue # Consume header
 
-                    # Check for Section ("1 Field of Play" OR a standalone digit followed by text next loop?
-                    # For now, let's keep the regex simple. If it splits "1" and "Objectives", we might need 
-                    # a dedicated state machine. But let's see if sorting fixes it first.
                     if section_pattern.match(block_text):
                         # Flush prev
                         if current_chunk_text.strip():
@@ -114,24 +133,32 @@ class DocumentAILayoutMixin:
                                 page_content=current_chunk_text.strip(),
                                 metadata={
                                     "source": "PDF (DocAI-Layout)", 
-                                    "rule": current_rule, 
+                                    "rule": current_rule if current_content_type == "body" else "N/A", 
                                     "variant": variant,
                                     "chapter": current_chapter,
-                                    "section": current_section,
-                                    "page": page.page_number
+                                    "section": current_section if current_content_type == "body" else "N/A",
+                                    "page": page.page_number,
+                                    "content_type": current_content_type
                                 }
                             ))
                             current_chunk_text = ""
                         
                         current_section = block_text
+                        # RESET rule context on major section to avoid "caching" old rules
+                        current_rule = "General" 
                         continue # Consume header
 
-                    # --- Rule Detection (Existing Logic) ---
-                    # Match start of line, capture number. Allow trailing text.
-                    # Group 1: Whole Number (e.g. "Rule 9.12", "1.1")
-                    # Group 2: Optional "Rule " prefix
-                    # Group 3: Specific rule number parts...
-                    match_header = header_pattern.match(block_text)
+                    # --- Rule Detection (Enhanced) ---
+                    # 1. Spatial Filtering: Ignore top 5% and bottom 5% of page (Header/Footer zones)
+                    # where page numbers and generic document info usually reside.
+                    is_in_content_zone = True
+                    if block.layout.bounding_poly.normalized_vertices:
+                        ys = [v.y for v in block.layout.bounding_poly.normalized_vertices]
+                        max_y = max(ys)
+                        if max_y > 0.95:
+                            is_in_content_zone = False
+
+                    match_header = header_pattern.match(block_text) if is_in_content_zone else None
                     if match_header:
                         new_rule = match_header.group(1) # Extract just "Rule 9.12" or "1.1"
                         
@@ -140,17 +167,16 @@ class DocumentAILayoutMixin:
                                 page_content=current_chunk_text.strip(),
                                 metadata={
                                     "source": "PDF (DocAI-Layout)", 
-                                    "rule": current_rule, 
+                                    "rule": current_rule if current_content_type == "body" else "N/A", 
                                     "variant": variant,
                                     "chapter": current_chapter,
-                                    "section": current_section,
-                                    "page": page.page_number
+                                    "section": current_section if current_content_type == "body" else "N/A",
+                                    "page": page.page_number,
+                                    "content_type": current_content_type
                                 }
                             ))
                         
                         current_rule = new_rule
-                        # If the block contains text after the number ("1.1 Umpiring..."), chunk starts here.
-                        # We don't "consume" the whole block as a header only. We let it be part of content.
                         current_chunk_text = block_text + " "
                     
                     # --- New: Standalone Section Number Producer ---
@@ -168,10 +194,11 @@ class DocumentAILayoutMixin:
                 page_content=current_chunk_text.strip(),
                 metadata={
                     "source": "PDF (DocAI-Layout)", 
-                    "rule": current_rule, 
+                    "rule": current_rule if current_content_type == "body" else "N/A", 
                     "variant": variant,
                     "chapter": current_chapter,
-                    "section": current_section,
+                    "section": current_section if current_content_type == "body" else "N/A",
+                    "content_type": current_content_type,
                      # Best guess page number for leftover content (last seen page)
                     "page": shard.pages[-1].page_number if shard.pages else 0
                 }

@@ -17,6 +17,9 @@ api:
 admin:
 	$(PY) -m streamlit run Query.py
 
+admin-debug:
+	$(PY) -m streamlit run Query.py --logger.level=debug
+
 evals:
 	$(PY) -m evals.evaluate
 

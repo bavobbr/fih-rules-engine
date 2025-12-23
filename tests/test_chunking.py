@@ -36,9 +36,23 @@ class TestChunking(DocumentAILayoutMixin):
         # We just want to test rules regex logic here
         return blocks
 
-    def _make_block(self, text):
+    def _make_block(self, text, min_y=0.2, max_y=0.3):
         # Create an object structure that passes 'text' as the 'text_anchor' 
         # to our overridden _get_text
+        class Vertex:
+            def __init__(self, x, y):
+                self.x = x
+                self.y = y
+
+        class Poly:
+            def __init__(self, min_y, max_y):
+                self.normalized_vertices = [
+                    Vertex(0.1, min_y),
+                    Vertex(0.9, min_y),
+                    Vertex(0.9, max_y),
+                    Vertex(0.1, max_y)
+                ]
+
         class Layout:
             pass
         class Block:
@@ -47,6 +61,7 @@ class TestChunking(DocumentAILayoutMixin):
         b = Block()
         l = Layout()
         l.text_anchor = text # This will be passed to _get_text
+        l.bounding_poly = Poly(min_y, max_y)
         b.layout = l
         return b
 
@@ -77,7 +92,7 @@ class TestChunking(DocumentAILayoutMixin):
                 MockPage([
                     self._make_block("Rule 1.1 Start"),
                     self._make_block("Content A."),
-                    self._make_block("36"), # Page Number
+                    self._make_block("36", min_y=0.96, max_y=0.98), # Footer area
                     self._make_block("Content B."), # Should continue 1.1 with text
                     self._make_block("Rule 1.2 Stop")
                 ])
@@ -85,12 +100,87 @@ class TestChunking(DocumentAILayoutMixin):
         ], "test_variant")
         
         assert len(chunks) == 2
-        # Check that "36" was appended to the text body
-        # Logic: Content A.\n36\nContent B.\n
         text = chunks[0].page_content
         assert "Content A." in text
         assert "Content B." in text
-        # depending on logic, 36 might satisfy section_num_pattern and be handled specially
-        # In logic: if pending_section_num ("36") -> next loop -> if next block not header -> append "36\n"
-        assert "36" in text # Loose check sufficient
+        assert "36" in text # It's just text in a footer, we keep it but don't treat as rule
+
+    def test_spatial_filtering(self):
+        """Ensure blocks in extreme footer are NOT detected as rules, but top zone is OK."""
+        chunks = self._layout_chunking([
+            MockShard([
+                MockPage([
+                    # Rule in top zone (0.01-0.03) - SHOULD BE DETECTED
+                    self._make_block("Rule 1.1", min_y=0.01, max_y=0.03), 
+                    self._make_block("Actual Content Starts Here."),
+                    # Page indicator in footer - SHOULD BE IGNORED
+                    self._make_block("9.12", min_y=0.96, max_y=0.98), 
+                ])
+            ], "")
+        ], "test_variant")
         
+        assert len(chunks) == 1
+        assert chunks[0].metadata['rule'] == "Rule 1.1" # Top zone is now valid
+
+    def test_rule_resetting(self):
+        """Ensure rule context resets on Chapter/Section headers."""
+        chunks = self._layout_chunking([
+            MockShard([
+                MockPage([
+                    self._make_block("Rule 9.12 Important"),
+                    self._make_block("Some content for 9.12."),
+                    self._make_block("THE PITCH"), # Chapter header (All Caps)
+                    self._make_block("The pitch shall be rectangular."),
+                    self._make_block("1 Dimensions"), # Section Header
+                    self._make_block("The dimensions are...")
+                ])
+            ], "")
+        ], "test_variant")
+        
+        # We expect 3 chunks:
+        # 1. Rule 9.12
+        # 2. THE PITCH (Chapter) -> rule should be RESET to "General"
+        # 3. 1 Dimensions (Section) -> rule should be "General"
+        
+        assert len(chunks) == 3
+        # Chunk 1: Rule 9.12
+        assert "9.12" in chunks[0].metadata['rule']
+        
+        # Chunk 2: THE PITCH
+        assert chunks[1].metadata['chapter'] == "THE PITCH"
+        assert chunks[1].metadata['rule'] == "General" # Reset triggered
+        
+        # Chunk 3: 1 Dimensions
+        assert chunks[2].metadata['section'] == "1 Dimensions"
+        assert chunks[2].metadata['rule'] == "General" # Sticky reset
+
+    def test_content_type_metadata(self):
+        """Ensure content_type is added to metadata and affects rule/chapter detection."""
+        page_config = {
+            1: {"content_type": "definitions"},
+            2: {"content_type": "body"}
+        }
+        chunks = self._layout_chunking([
+            MockShard([
+                # Page 1: Definitions
+                MockPage([
+                    self._make_block("Rule 1.1 definitions", min_y=0.1, max_y=0.2),
+                ], page_number=1),
+                # Page 2: Body
+                MockPage([
+                    self._make_block("Rule 1.2 body", min_y=0.1, max_y=0.2),
+                ], page_number=2),
+            ], "")
+        ], "test_variant", page_config=page_config)
+        
+        assert len(chunks) == 2
+        # Chunk 1 (Definitions)
+        assert chunks[0].metadata["content_type"] == "definitions"
+        assert chunks[0].metadata["rule"] == "N/A"
+        assert chunks[0].metadata["chapter"] == "General" # Should be set
+        assert chunks[0].metadata["section"] == "N/A" # Non-body should not have section
+        
+        # Chunk 2 (Body)
+        assert chunks[1].metadata["content_type"] == "body"
+        assert chunks[1].metadata["rule"] == "Rule 1.2"
+        assert chunks[1].metadata["section"] == "General" # Body should have section

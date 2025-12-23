@@ -90,13 +90,21 @@ class VertexAILoader(BaseLoader, DocumentAILayoutMixin):
             raw_documents = self._process_batch_with_retry(temp_gcs_uri)
             
             # 5. Chunking & Remapping
-            # The `_layout_chunking` from Mixin expects `documentai.Document` objects (Shards).
-            # We need to apply it, getting `Document` objects back, and THEN fix page numbers.
-            
-            # Wait, `raw_documents` here from our internal `_process_batch` should return SHARDS (docai objects)
-            # Not LangChain documents yet.
-            
-            chunks = self._layout_chunking(raw_documents, variant)
+            # Create a page configuration map for the chunker
+            page_config = {}
+            # We need to map filtered page indices to their content types
+            # filtered_page_index 0 -> page_mapping[0] (original page)
+            # find which section in valid_ranges contains original page
+            for i, original_page in enumerate(page_mapping):
+                filtered_page_num = i + 1
+                content_type = "body" # Default
+                for s in valid_ranges:
+                     if s["start_page"] <= original_page <= s["end_page"]:
+                          content_type = s["content_type"]
+                          break
+                page_config[filtered_page_num] = {"content_type": content_type}
+
+            chunks = self._layout_chunking(raw_documents, variant, page_config=page_config)
             
             # Remap Pages
             for chunk in chunks:

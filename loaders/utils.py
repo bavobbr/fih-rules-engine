@@ -16,7 +16,7 @@ def summarize_text(text: str) -> str:
         temperature=0
     )
     
-    prompt = f"""Summarize the following rule content in a single plain English sentence (max 15 words).
+    prompt = f"""Summarize the following field hockey rule content in a single plain English sentence (max 15 words).
     This will be used as a human-readable label for a specific rule chunk.
     Do not use "This rule states..." or "The content..." just describe the topic directly.
     
