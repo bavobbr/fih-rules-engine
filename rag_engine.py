@@ -144,7 +144,7 @@ You are provided with a set of rules for {detected_variant} hockey and their met
 
 STRUCTURE YOUR RESPONSE:
 - Start with a human-friendly, summary of the answer as a plain paragraph.
-- Follow with a **markdown bulleted list** of technical details derived ONLY from the provided CONTEXT.
+- Follow with a **markdown bulleted list** of technical details derived ONLY from the provided CONTEXT, when they are relevant to the question.
 - Do NOT use labels like "Summary", "Details", "1.", or "2." to demarcate these sections.
 
 CITATION RULES:
