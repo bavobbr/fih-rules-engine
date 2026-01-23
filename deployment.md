@@ -114,6 +114,16 @@ gcloud run deploy fih-rag-admin \
     --set-env-vars "GCP_PROJECT_ID=$PROJECT_ID,CLOUDSQL_INSTANCE=fih-rag-db,DB_USER=postgres,DB_PASS=<YOUR_DB_PASSWORD>,API_KEY=<YOUR_API_KEY>,DOCAI_PROCESSOR_ID=your-processor-id,GCS_BUCKET_NAME=fih-rag-staging-$PROJECT_ID"
 ```
 
+### 3. Accessing the Private Admin Dashboard
+
+Since the Admin Dashboard is deployed with `--no-allow-unauthenticated`, you cannot access the URL directly. Instead, use the Cloud Run proxy to create a secure tunnel:
+
+```bash
+gcloud run services proxy fih-rag-admin --region $REGION --port 8501
+```
+
+Once running, access the dashboard locally at [http://localhost:8501](http://localhost:8501).
+
 ---
 
 > [!TIP]
