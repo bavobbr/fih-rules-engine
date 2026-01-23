@@ -216,23 +216,24 @@ ANSWER:
         """Rewrite the latest user message as a standalone query."""
         if not history: return query
         history_str = "\n".join([f"{role}: {txt}" for role, txt in history[-4:]])
-        prompt = f"""Given the following conversation and a follow up question about Field Hockey, rephrase the follow up question to be a standalone question.
-        Do NOT answer the question. Just rewrite it to be self-contained and have all the relevant context provided.
-        First analyze the hockey variant (outdoor, indoor, hockey5s) from the given context. If not clear from context, default to outdoor. 
-        Prepend the variant in a strict format: [VARIANT: <variant>]
-        
-        Example question:
-        In indoor hockey can a player hit the ball?
+        prompt = f"""Given the following conversation and a follow up user input about Field Hockey.
 
-        Example output:
-        [VARIANT: indoor] Can a player hit the ball?
-        
-        Chat History:
-        {history_str}
-        
-        Follow Up Input: {query}
-        
-        Standalone Question:"""
+YOUR GOAL:
+Rephrase the 'Follow Up Input' to be a standalone question, using the 'Chat History' ONLY to resolve pronouns (it, they, that) or ambiguous references to the previous topic.
+
+RULES:
+1. If the 'Follow Up Input' is a valid follow-up question, rewrite it to be fully self-contained including the hockey variant.
+2. If the 'Follow Up Input' is completely unrelated to the previous context or is gibberish/nonsense, DO NOT change it. Return it exactly as is (but still add the variant tag).
+3. Do NOT attempt to answer the question.
+4. First analyze the hockey variant (outdoor, indoor, hockey5s) from the context. Default to 'outdoor' if unclear.
+5. Prepend the variant in a strict format: [VARIANT: <variant>]
+
+Chat History:
+{history_str}
+
+Follow Up Input: {query}
+
+Standalone Question:"""
         return self.llm.invoke(prompt).strip()
 
     def _route_query(self, query):
