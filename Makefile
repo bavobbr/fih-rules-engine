@@ -23,8 +23,11 @@ admin-debug:
 evals:
 	$(PY) -m evals.evaluate
 
+dataset-gen:
+	$(PY) -m evals.generate_dataset
+
 db-clean:
-	$(PY) -m scripts.cloudsql_truncate_table
+	$(PY) -m scripts.reset_database
 
 ingest-preview:
 	$(PY) -m scripts.export_chunks_vertex

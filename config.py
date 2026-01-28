@@ -50,3 +50,20 @@ VARIANTS = {
 # Logging
 # Valid values: "JSON" (default), "HUMAN"
 LOG_FORMAT = os.getenv("LOG_FORMAT", "JSON").upper()
+
+TOP_50_NATIONS = {
+    "International (Official)": None,
+    "Argentina": "ARG", "Australia": "AUS", "Austria": "AUT", "Bangladesh": "BAN",
+    "Belarus": "BLR", "Belgium": "BEL", "Brazil": "BRA", "Canada": "CAN",
+    "Chile": "CHI", "China": "CHN", "Chinese Taipei": "TPE", "Croatia": "CRO",
+    "Cuba": "CUB", "Czech Republic": "CZE", "Egypt": "EGY", "England": "ENG",
+    "Finland": "FIN", "France": "FRA", "Germany": "GER", "Ghana": "GHA",
+    "Guatemala": "GUA", "Hong Kong": "HKG", "India": "IND", "Ireland": "IRL",
+    "Italy": "ITA", "Japan": "JPN", "Korea": "KOR", "Malaysia": "MAS",
+    "Mexico": "MEX", "Netherlands": "NED", "New Zealand": "NZL", "Nigeria": "NGR",
+    "Oman": "OMA", "Pakistan": "PAK", "Poland": "POL", "Russia": "RUS",
+    "Scotland": "SCO", "South Africa": "RSA", "Spain": "ESP", "Sri Lanka": "SRI",
+    "Switzerland": "SUI", "Thailand": "THA", "Trinidad & Tobago": "TTO",
+    "Turkey": "TUR", "Ukraine": "UKR", "United States": "USA", "Uruguay": "URU",
+    "Wales": "WAL", "Zimbabwe": "ZIM"
+}

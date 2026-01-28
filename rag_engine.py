@@ -10,6 +10,9 @@ import config
 from database import PostgresVectorDB
 from logger import get_logger
 
+from loaders.vertex_ai_loader import VertexAILoader
+from loaders.sequential_loader import SequentialLoader
+
 logger = get_logger(__name__)
 
 class FIHRulesEngine:
@@ -17,7 +20,6 @@ class FIHRulesEngine:
 
     def __init__(self):
         from langchain_google_vertexai import VertexAIEmbeddings, VertexAI
-        from google.cloud import discoveryengine_v1 as discoveryengine
         
         # Models
         self.embeddings = VertexAIEmbeddings(
@@ -33,12 +35,19 @@ class FIHRulesEngine:
         )
         # Database
         self.db = PostgresVectorDB()
+        
+        # Loaders
+        self.loader_official = VertexAILoader()
+        self.loader_local = SequentialLoader(chunk_size=1000, chunk_overlap=200)
 
     # Ingestion
-    def ingest_pdf(self, file_path, variant, original_filename=None):
+    def ingest_pdf(self, file_path, variant, country_code=None, original_filename=None, clear_existing=True):
         """Parse a PDF, chunk, embed and persist under a ruleset variant.
-
-        Validates 'variant' against config.VARIANTS to prevent unauthorized data creation.
+        
+        Args:
+            country_code: 3-letter ISO/FIH code (e.g. 'BEL'). If None, treats as Official Rules.
+            clear_existing: If True, deletes existing rules for this scope before ingesting (Replace Mode).
+                            If False, keeps existing rules and adds new ones (Append Mode).
         """
         # 0. Validate Input
         if variant not in config.VARIANTS:
@@ -49,18 +58,39 @@ class FIHRulesEngine:
 
         # 2. Ingest
         # Dynamically load the configured loader (Online vs Batch) 
-        # Lazy import loaders
-        import loaders
-        docai_loader = loaders.get_document_ai_loader()
-        docs = docai_loader.load_and_chunk(file_path, variant, original_filename=original_filename)
+        if country_code:
+            # Local Rulebook -> Sequential Loading (Unstructured)
+            logger.info(f"Ingesting Local Rules for {country_code} (Sequential Mode)...")
+            # Use the pre-configured loader with correct chunk settings
+            docs = self.loader_local.load_and_chunk(file_path, variant, original_filename=original_filename)
+            
+            # Enrich with Country Metadata
+            for d in docs:
+                d.metadata["country"] = country_code
+                d.metadata["type"] = "local"
+        else:
+            # Official Rulebook -> Document AI (Structured + Vertex Analysis)
+            logger.info(f"Ingesting Official Rules for {variant} (Vertex AI Mode)...")
+            # Use official loader logic (could use self.loader_official, but typical pattern uses factory)
+            # Keeping existing factory pattern for official to minimize risk
+            import loaders
+            docai_loader = loaders.get_document_ai_loader()
+            docs = docai_loader.load_and_chunk(file_path, variant, original_filename=original_filename)
+            
+            # Enrich with Official Tag
+            for d in docs:
+                d.metadata["type"] = "official"
 
         if not docs:
             logger.warning("No chunks generated!")
             return 0
         
-        # Deduplication: Clear existing data for this variant
-        logger.info(f"Cleaning existing '{variant}' data...")
-        self.db.delete_variant(variant)
+        # Deduplication: scoped deletion (Only if clear_existing is True)
+        if clear_existing:
+            logger.info(f"Cleaning existing data for variant='{variant}', country='{country_code}'...")
+            self.db.delete_scoped_data(variant, country_code=country_code)
+        else:
+            logger.info(f"Append Mode: Preserving existing data for variant='{variant}', country='{country_code}'.")
         
         # Embed
         logger.info(f"Generating embeddings for {len(docs)} chunks...")
@@ -75,9 +105,37 @@ class FIHRulesEngine:
         return len(docs)
 
     # Querying
-    def query(self, user_input, history=[]):
-        """Answer a user question using contextualization, routing, and RAG."""
-        logger.info(f"Query: {user_input}")
+    def list_jurisdictions(self):
+        """
+        List all jurisdictions (countries) that have local rules ingested.
+        Returns a list of dicts: [{"code": "BEL", "name": "Belgium"}, ...]
+        """
+        active_codes = self.db.get_active_jurisdictions()
+        
+        # Reverse map TOP_50_NATIONS to get code -> name
+        # The config has Name -> Code (e.g. "Belgium": "BEL")
+        # We need to find the name for each active code.
+        code_to_name = {v: k for k, v in config.TOP_50_NATIONS.items() if v is not None}
+        
+        results = []
+        for code in active_codes:
+            # Default to the code itself if name not found in TOP 50 (e.g. custom ingest)
+            name = code_to_name.get(code, f"Unknown ({code})")
+            results.append({"code": code, "name": name})
+            
+        # Sort by name for UI convenience
+        results.sort(key=lambda x: x["name"])
+        return results
+
+    def query(self, user_input, history=[], country_code=None):
+        """Answer a user question using contextualization, routing, and RAG.
+        
+        Strategies:
+        - Route to correct variant (Indoor/Outdoor).
+        - Dual-Path Retrieval: Fetch Global Rules AND Local Rules separately.
+        - Merge & Rerank.
+        """
+        logger.info(f"Query: {user_input} [Country: {country_code}]")
         
         # Reformulate & route
         standalone_query = self._contextualize_query(history, user_input)
@@ -86,19 +144,33 @@ class FIHRulesEngine:
         detected_variant = self._route_query(standalone_query)
         if detected_variant not in config.VARIANTS: 
             detected_variant = "outdoor"
-        # Clean query for embedding (propagate intent, not routing instruction)
+        
         import re
-        # Remove [VARIANT: ...] prefix to avoid semantic drift
-        # Matches "[VARIANT: indoor] Can I..." or "[VARIANT: indoor hockey] Can I..."
+        # Remove [VARIANT: ...] prefix
         clean_query = re.sub(r"^\[VARIANT:.*?\]\s*", "", standalone_query, flags=re.IGNORECASE)
         
         # Embed query
         query_vector = self.embeddings.embed_query(clean_query)
-        # Retrieve
-        results = self.db.search_hybrid(clean_query, query_vector, detected_variant, k=config.RETRIEVAL_K)
         
-        # Convert DB results back to LangChain Documents for consistency
-        docs = [Document(page_content=r["content"], metadata=r["metadata"]) for r in results]
+        # --- DUAL-PATH RETRIEVAL ---
+        # Path 1: Global Rules (Official) - Always fetch
+        results_global = self.db.search_hybrid(
+            clean_query, query_vector, detected_variant, country_code=None, k=config.RETRIEVAL_K
+        )
+        
+        results_local = []
+        if country_code:
+            # Path 2: Local Rules - Fetch if jurisdiction applies
+            results_local = self.db.search_hybrid(
+                clean_query, query_vector, detected_variant, country_code=country_code, k=config.RETRIEVAL_K
+            )
+            
+        # Merge Results
+        # Simple concatenation (Reranker will sort out relevance)
+        combined_results = results_global + results_local
+        
+        # Convert to Documents
+        docs = [Document(page_content=r["content"], metadata=r["metadata"]) for r in combined_results]
         
         # Rerank
         if docs:
@@ -116,11 +188,18 @@ class FIHRulesEngine:
             section = meta.get("section", "")
             
             # Construct Citation Header
-            # e.g. [Rule 9.12] [Source: rules.pdf p.42] (Context: PLAYING THE GAME > Field of Play)
             source_file = meta.get("source_file", "unknown")
+            country = meta.get("country")
+            
+            # Explicit Source Tag for LLM
+            if country:
+                origin_tag = f"[SOURCE: LOCAL ({country})]"
+            else:
+                origin_tag = "[SOURCE: OFFICIAL]"
+
             page_num = meta.get("page", "?")
             
-            context_string = f"[Source: {source_file} p.{page_num}]"
+            context_string = f"{origin_tag} [File: {source_file} p.{page_num}]"
             if rule:
                 context_string += f" [Rule: {rule}]"
             if chapter or section:
@@ -138,20 +217,30 @@ class FIHRulesEngine:
                 "source_docs": []
             }
 
+        jurisdiction_label = f"{country_code} National" if country_code else "International"
+
         full_prompt = f"""
-You are an expert FIH international Field Hockey Umpire for {detected_variant}.
-You are provided with a set of rules for {detected_variant} hockey and their metadata fields source, page, rule, chapter, section where available.
+You are an expert FIH international Field Hockey Umpire for {detected_variant} hockey, answering questions for jurisdiction: **{jurisdiction_label}**.
+
+HIERARCHY RULE - CRITICAL:
+1. You are provided with a mix of 'OFFICIAL' rules and 'LOCAL' ({country_code}) rules.
+2. If a 'LOCAL' rule conflicts with an 'OFFICIAL' rule, the **LOCAL rule completely overrides** the official rule for this user.
+3. If no local rule exists for a specific situation, apply the standard official rule.
+
+MULTILINGUAL INSTRUCTION:
+The context may contain rules in different languages (e.g. English, Dutch, German). 
+Answer the user's question in the language they asked (usually English), translating the rule content if necessary.
 
 STRUCTURE YOUR RESPONSE:
-- Start with a human-friendly, summary of the answer as a plain paragraph.
-- Follow with a **markdown bulleted list** of technical details derived ONLY from the provided CONTEXT, when they are relevant to the question.
-- Do NOT use labels like "Summary", "Details", "1.", or "2." to demarcate these sections.
+- Start with a human-friendly, summary of the answer.
+- If applying a Local Rule, explicitly state: *"In {country_code}, the rule is..."*
+- Follow with a **markdown bulleted list** of technical details derived ONLY from the provided CONTEXT.
 
 CITATION RULES:
-- For each bullet point in the technical details, try to cite the rule or page source. Prefer rules over pages where available. You can use both.
-    - **If the rule for that point is a number** (e.g., "9.1", "12"), use: **(rule <rule>)**
-    - **If the rule for that point is missing, use: **(page <page>)**
-    - Use double asterisks for citations as shown above.
+- For each bullet point, cite the source.
+- Use **(Rule <rule>)** or **(Page <page>)**.
+- IMPORTANT: If the rule number or page is unknown/missing in the context, DO NOT invent one or write "(Rule unknown)". Just OMIT the specific citation.
+- If it is a local rule, append **(local rule)** to the end of the bullet point.
 
 CONTEXT:
 {context_text}

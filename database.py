@@ -66,7 +66,10 @@ class PostgresVectorDB:
             # 3. Create GIN index for Full Text Search
             conn.execute(text(f"CREATE INDEX IF NOT EXISTS {table_name}_tsv_idx ON {table_name} USING GIN(tsv);"))
             
-            # 4. Alter Table (Self-Healing for existing tables)
+            # 4. Create Index on Metadata (for efficient country filtering)
+            conn.execute(text(f"CREATE INDEX IF NOT EXISTS {table_name}_meta_country_idx ON {table_name} USING GIN((metadata->'country'));"))
+
+            # 5. Alter Table (Self-Healing for existing tables)
             # Check if columns exist
             cols_to_add = {
                 "metadata": "JSONB DEFAULT '{}'::jsonb",
@@ -94,6 +97,12 @@ class PostgresVectorDB:
             
         data = []
         for content, vector, meta in zip(contents, vectors, metadatas):
+            # Determine FTS Configuration
+            # Official Rules (no country) -> 'english' (Stemming enabled)
+            # Local Rules (country set) -> 'simple' (No stemming, safe for mixed languages)
+            country = meta.get("country")
+            fts_config = 'simple' if country else 'english'
+            
             # Build search string from content + key metadata (rule, section)
             search_parts = [content]
             if meta.get("rule"): search_parts.append(meta.get("rule"))
@@ -105,77 +114,124 @@ class PostgresVectorDB:
                 "embedding": str(vector),
                 "variant": variant,
                 "metadata": import_json_dump(meta),
-                "search_text": search_text
+                "search_text": search_text,
+                "fts_config": fts_config
             })
 
         with self.pool.connect() as conn:
-            stmt = text(f"""
-                INSERT INTO {config.TABLE_NAME} (content, embedding, variant, metadata, tv)
-                VALUES (:content, :embedding, :variant, :metadata, to_tsvector('english', :search_text))
-            """)
-            # Fix typo: 'tv' should be 'tsv'
-            stmt = text(f"""
-                INSERT INTO {config.TABLE_NAME} (content, embedding, variant, metadata, tv)
-                VALUES (:content, :embedding, :variant, :metadata, to_tsvector('english', :search_text))
-            """)
-            # Re-writing to be clean
-            stmt = text(f"""
-                INSERT INTO {config.TABLE_NAME} (content, embedding, variant, metadata, tsv)
-                VALUES (:content, :embedding, :variant, :metadata, to_tsvector('english', :search_text))
-            """)
-            conn.execute(stmt, data)
+            # Group by config to batch efficiently
+            import itertools
+            data.sort(key=lambda x: x["fts_config"])
+            for config_name, group in itertools.groupby(data, key=lambda x: x["fts_config"]):
+                group_list = list(group)
+                stmt = text(f"""
+                    INSERT INTO {config.TABLE_NAME} (content, embedding, variant, metadata, tsv)
+                    VALUES (:content, :embedding, :variant, :metadata, to_tsvector('{config_name}', :search_text))
+                """)
+                conn.execute(stmt, group_list)
+                
             conn.commit()
 
-    def delete_variant(self, variant):
-        """Delete all existing chunks for a specific variant (Idempotency)."""
+    def delete_scoped_data(self, variant, country_code=None):
+        """Delete chunks for a specific scope (Country OR Official).
+        
+        If country_code is provided: Delete ONLY that country's data for this variant.
+        If country_code is None: Delete ONLY Official data (where country is NULL or type='official') for this variant.
+        """
+        table = config.TABLE_NAME
         with self.pool.connect() as conn:
-            stmt = text(f"DELETE FROM {config.TABLE_NAME} WHERE variant = :variant")
-            conn.execute(stmt, {"variant": variant})
+            if country_code:
+                # Delete National Rulebook
+                logger.info(f"Deleting scoped data for variant='{variant}', country='{country_code}'")
+                stmt = text(f"DELETE FROM {table} WHERE variant = :variant AND metadata->>'country' = :country")
+                conn.execute(stmt, {"variant": variant, "country": country_code})
+            else:
+                # Delete Official Rulebook (Safe: Don't touch countries)
+                logger.info(f"Deleting scoped Official data for variant='{variant}'")
+                stmt = text(f"""
+                    DELETE FROM {table} 
+                    WHERE variant = :variant 
+                    AND (metadata->>'country' IS NULL OR metadata->>'type' = 'official')
+                """)
+                conn.execute(stmt, {"variant": variant})
             conn.commit()
 
-    def variant_exists(self, variant) -> bool:
-        """Check if any data exists for the given variant."""
+    def variant_exists(self, variant, country_code=None) -> bool:
+        """Check if any data exists for the given variant/scope."""
         with self.pool.connect() as conn:
-            stmt = text(f"SELECT 1 FROM {config.TABLE_NAME} WHERE variant = :variant LIMIT 1")
-            result = conn.execute(stmt, {"variant": variant}).scalar()
+            if country_code:
+                stmt = text(f"SELECT 1 FROM {config.TABLE_NAME} WHERE variant = :variant AND metadata->>'country' = :country LIMIT 1")
+                result = conn.execute(stmt, {"variant": variant, "country": country_code}).scalar()
+            else:
+                stmt = text(f"""
+                    SELECT 1 FROM {config.TABLE_NAME} 
+                    WHERE variant = :variant 
+                      AND (metadata->>'country' IS NULL OR metadata->>'type' = 'official') 
+                    LIMIT 1
+                """)
+                result = conn.execute(stmt, {"variant": variant}).scalar()
             return result is not None
 
-    def search_hybrid(self, query_text, query_vector, variant, k=15):
-        """Perform Hybrid Search using Reciprocal Rank Fusion (RRF)."""
+    def search_hybrid(self, query_text, query_vector, variant, country_code=None, k=15):
+        """Perform Hybrid Search using Reciprocal Rank Fusion (RRF).
+        
+        Scope:
+        - If country_code is None: Global Search (Official Rules Only).
+        - If country_code is SET: Local Search (Specific Country Rules Only).
+        
+        The calling engine is responsible for merging these if a Dual-Path strategy is desired.
+        """
+        table = config.TABLE_NAME
+        
+        # SQL Filter Condition
+        # STRICT FILTERING for Dual-Path retrieval support.
+        if country_code:
+            filter_condition = "metadata->>'country' = :country"
+            boost_logic = "1.0" 
+            fts_config = 'simple'  # Local rules might be mixed language -> No stemming
+        else:
+            filter_condition = "(metadata->>'country' IS NULL OR metadata->>'type' = 'official')"
+            boost_logic = "1.0"
+            fts_config = 'english' # Official rules are English -> Use stemming
+
         with self.pool.connect() as conn:
             # Combine Vector Search and FTS using Reciprocal Rank Fusion
-            # We use a CTE to get top candidates from both and then rank them.
             stmt = text(f"""
                 WITH vector_search AS (
                     SELECT id, 1.0 / (ROW_NUMBER() OVER (ORDER BY embedding <=> :vector) + 60) as score
-                    FROM {config.TABLE_NAME}
-                    WHERE variant = :variant
+                    FROM {table}
+                    WHERE variant = :variant AND {filter_condition}
                     ORDER BY embedding <=> :vector
                     LIMIT 50
                 ),
                 keyword_search AS (
-                    SELECT id, 1.0 / (ROW_NUMBER() OVER (ORDER BY ts_rank(tsv, websearch_to_tsquery('english', :query)) DESC) + 60) as score
-                    FROM {config.TABLE_NAME}
-                    WHERE variant = :variant AND tsv @@ websearch_to_tsquery('english', :query)
-                    ORDER BY ts_rank(tsv, websearch_to_tsquery('english', :query)) DESC
+                    SELECT id, 1.0 / (ROW_NUMBER() OVER (ORDER BY ts_rank(tsv, websearch_to_tsquery('{fts_config}', :query)) DESC) + 60) as score
+                    FROM {table}
+                    WHERE variant = :variant AND {filter_condition} 
+                      AND tsv @@ websearch_to_tsquery('{fts_config}', :query)
+                    ORDER BY ts_rank(tsv, websearch_to_tsquery('{fts_config}', :query)) DESC
                     LIMIT 50
                 )
                 SELECT content, variant, metadata, 
-                       COALESCE(vector_search.score, 0) + COALESCE(keyword_search.score, 0) as combined_score
-                FROM {config.TABLE_NAME}
-                LEFT JOIN vector_search USING (id)
-                LEFT JOIN keyword_search USING (id)
-                WHERE vector_search.score IS NOT NULL OR keyword_search.score IS NOT NULL
-                ORDER BY combined_score DESC
+                       COALESCE(vector_search.score, 0) + COALESCE(keyword_search.score, 0) as rrf_score
+                FROM vector_search
+                FULL OUTER JOIN keyword_search ON vector_search.id = keyword_search.id
+                JOIN {table} ON {table}.id = COALESCE(vector_search.id, keyword_search.id)
+                ORDER BY rrf_score DESC
                 LIMIT :k
             """)
+
             
-            result = conn.execute(stmt, {
+            params = {
                 "variant": variant,
                 "vector": str(query_vector),
                 "query": query_text,
                 "k": k
-            })
+            }
+            if country_code:
+                params["country"] = country_code
+            
+            result = conn.execute(stmt, params)
             
             return [
                 {"content": row[0], "variant": row[1], "metadata": row[2], "hybrid_score": row[3]} 
@@ -203,6 +259,26 @@ class PostgresVectorDB:
                 {"content": row[0], "variant": row[1], "metadata": row[2]} 
                 for row in result
             ]
+
+    def clear_table(self):
+        """Truncate the table, deleting all rows and resetting ID counters."""
+        with self.pool.connect() as conn:
+            stmt = text(f"TRUNCATE TABLE {config.TABLE_NAME} RESTART IDENTITY;")
+            conn.execute(stmt)
+            conn.commit()
+            logger.warning(f"Truncated table {config.TABLE_NAME}.")
+
+    def get_active_jurisdictions(self):
+        """Return a list of distinct country codes present in the database."""
+        with self.pool.connect() as conn:
+            # Query the JSONB content to find all non-null country values
+            stmt = text(f"""
+                SELECT DISTINCT metadata->>'country' as country_code 
+                FROM {config.TABLE_NAME} 
+                WHERE metadata->>'country' IS NOT NULL
+            """)
+            result = conn.execute(stmt).fetchall()
+            return [row[0] for row in result]
 
 import json
 def import_json_dump(d):

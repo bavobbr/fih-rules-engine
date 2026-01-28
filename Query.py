@@ -44,8 +44,22 @@ except Exception as e:
     # st.exception(e) 
     st.stop()
 
+# --- CONSTANTS ---
+# Using centralized top 50 nations from config
+TOP_50_NATIONS = config.TOP_50_NATIONS
+# Added a few extra active nations just in case.
+
 # Sidebar: ingest a PDF with a selected ruleset variant
 with st.sidebar:
+    st.header("🌍 Jurisdiction")
+    selected_country_label = st.selectbox(
+        "Select Your Context",
+        options=list(TOP_50_NATIONS.keys()),
+        index=0
+    )
+    current_country_code = TOP_50_NATIONS[selected_country_label]
+
+    st.divider()
     st.header("📚 Knowledge Base")
     
     uploaded_file = st.file_uploader("Upload Rules PDF", type="pdf")
@@ -56,20 +70,60 @@ with st.sidebar:
         options=list(config.VARIANTS.keys()),
         format_func=lambda x: config.VARIANTS[x]
     )
+
+    # Context for Ingestion
+    is_national_appendix = st.checkbox("Is this a National Appendix?", value=False)
+    ingest_country_code = None
     
+    if is_national_appendix:
+        st.info(f"Uploading as Local Rules for: **{selected_country_label}**" if current_country_code else "Please select a country above!")
+        if not current_country_code:
+            st.error("You must select a country (not International) to upload a National Appendix.")
+        else:
+            ingest_country_code = current_country_code
+    
+    # NEW: Append Mode Toggle
+    append_mode = st.checkbox("Append to existing knowledge base? (Don't delete)", value=False, help="If checked, new rules will be added without deleting existing ones for this jurisdiction.")
+
     if uploaded_file and st.button("Ingest"):
-        with st.spinner(f"Indexing as {config.VARIANTS[selected_variant]}..."):
+        if is_national_appendix and not ingest_country_code:
+            st.error("Cannot ingest local rules without a country selected.")
+            st.stop()
+
+        label = f"{config.VARIANTS[selected_variant]} ({ingest_country_code or 'Official'})"
+        with st.spinner(f"Indexing as {label}..."):
             with tempfile.NamedTemporaryFile(delete=False) as tmp:
                 tmp.write(uploaded_file.getvalue())
                 tmp_path = tmp.name
             
-            # Persist with the selected variant label
-            count = engine.ingest_pdf(tmp_path, selected_variant, original_filename=uploaded_file.name)
+            # Persist with selected mode
+            clear_flag = not append_mode
+            count = engine.ingest_pdf(
+                tmp_path, 
+                selected_variant, 
+                country_code=ingest_country_code,
+                original_filename=uploaded_file.name,
+                clear_existing=clear_flag
+            )
             
-            if count == -1:
-                st.warning(f"Data for **{selected_variant}** already exists in the Knowledge Base. To overwrite, please clear the database first (admin only).")
-            else:
-                st.success(f"Successfully indexed {count} rules for {selected_variant}!")
+            mode_msg = "Appended" if append_mode else "Replaced"
+            st.success(f"Successfully indexed {count} rules for {label}! ({mode_msg})")
+
+    st.markdown("---")
+    
+    # --- ADMIN/MANAGEMENT SECTION ---
+    with st.expander("⚙️ Manage Knowledge Base"):
+        st.warning("Danger Zone: Delete Rules")
+        
+        target_country = current_country_code # Based on selection above
+        target_variant = selected_variant
+        
+        scope_label = f"{config.VARIANTS[target_variant]} - {selected_country_label}"
+        
+        if st.button(f"🗑️ Delete All Rules for {scope_label}"):
+             with st.spinner("Deleting..."):
+                 engine.db.delete_scoped_data(target_variant, country_code=target_country)
+             st.success(f"Deleted all rules for {scope_label}.")
 
     st.markdown("---")
     st.markdown("👨‍💻 By **Bavo Bruylandt**")
@@ -96,7 +150,7 @@ def handle_query(query_text):
             history_list = [(m["role"], m["content"]) for m in st.session_state.messages]
             
             # Query the engine with recent message history
-            result = engine.query(query_text, history=history_list)
+            result = engine.query(query_text, history=history_list, country_code=current_country_code)
             
             st.markdown(result["answer"])
             
@@ -151,6 +205,9 @@ if st.session_state.last_debug:
              
              # Header with key info
              st.markdown(f"**Source {i+1}**: _{summary}_")
+             
+             with st.expander("📄 View Full Chunk Text"):
+                 st.text(doc.page_content)
              
              # Full metadata view
              st.json(doc.metadata, expanded=False)
