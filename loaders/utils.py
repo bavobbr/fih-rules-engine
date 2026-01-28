@@ -1,8 +1,25 @@
 from langchain_google_vertexai import VertexAI
 import config
 from logger import get_logger
+import re
 
 logger = get_logger(__name__)
+
+def clean_text(text: str) -> str:
+    """Cleans text by removing excessive whitespace and null bytes."""
+    if not text:
+        return ""
+    # Remove null bytes
+    text = text.replace("\x00", "")
+    # Normalize unicode
+    # text = unicodedata.normalize("NFKC", text)
+    # Replace multiple newlines with single newline (optional, but good for embedding)
+    # Actually for chunking we might want to keep paragraph breaks.
+    # Just collapse multiple spaces to one
+    # text = re.sub(r'\s+', ' ', text).strip() # This is too aggressive if we want to keep structure.
+    
+    # Simple cleanup:
+    return text.strip()
 
 def summarize_text(text: str) -> str:
     """Summarizes text into a short, human-readable label (max 15 words)."""

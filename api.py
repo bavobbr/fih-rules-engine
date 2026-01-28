@@ -65,6 +65,7 @@ class Message(BaseModel):
 class ChatRequest(BaseModel):
     query: str = Field(..., description="The user's question or query", example="What is a flick?")
     history: List[Message] = Field(default=[], description="The conversation history for context")
+    country: Optional[str] = Field(default=None, description="ISO/FIH Country Code for rule overrides (e.g. 'BEL').", example="BEL")
 
 class SourceDoc(BaseModel):
     page_content: str = Field(..., description="The text content from the source document")
@@ -75,7 +76,6 @@ class ChatResponse(BaseModel):
     standalone_query: str = Field(..., description="The query reformulated to be standalone based on history")
     variant: str = Field(..., description="The variant of the rules used (e.g., 'outdoor')")
     source_docs: List[SourceDoc] = Field(..., description="The source documents used to generate the answer")
-
 class EvalsMetrics(BaseModel):
     custom_metrics: Dict[str, float] = Field(..., description="Custom metrics calculated during evaluation (e.g., accuracy, hit rate)")
     ragas_metrics: Dict[str, float] = Field(..., description="RAGAS-specific metrics (e.g., faithfulness, answer relevancy)")
@@ -83,6 +83,11 @@ class EvalsMetrics(BaseModel):
 class EvalsResponse(BaseModel):
     timestamp: str = Field(..., description="ISO 8601 timestamp of when the evaluation report was generated")
     metrics: EvalsMetrics = Field(..., description="The evaluation metrics")
+
+def get_engine():
+    if engine is None:
+        raise HTTPException(status_code=503, detail="Engine not ready")
+    return engine
 
 # --- Endpoints ---
 
@@ -112,7 +117,8 @@ async def chat(request: ChatRequest):
         # Convert Pydantic models to dicts/tuples expected by engine
         history_list = [(m.role, m.content) for m in request.history]
         
-        result = engine.query(request.query, history=history_list)
+        # Pass country code to engine
+        result = engine.query(request.query, history=history_list, country_code=request.country)
         
         # Transform result for response
         # engine.query returns dict with keys: answer, standalone_query, variant, source_docs
@@ -133,6 +139,27 @@ async def chat(request: ChatRequest):
     except Exception as e:
         logger.error(f"Error processing chat request: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+class Jurisdiction(BaseModel):
+    code: str = Field(..., description="ISO 3-letter country code (e.g. 'BEL')")
+    name: str = Field(..., description="Full country name (e.g. 'Belgium')")
+
+@app.get("/jurisdictions", response_model=List[Jurisdiction], tags=["System"], summary="List Available Jurisdictions", response_description="List of countries with local rules ingested")
+async def get_jurisdictions():
+    """
+    List all jurisdictions (countries) that have local rules currently ingested in the knowledge base.
+    
+    Returns a list of objects containing the country code and full name.
+    """
+    if engine is None:
+        raise HTTPException(status_code=503, detail="Engine not ready")
+    
+    try:
+        results = engine.list_jurisdictions()
+        return [Jurisdiction(code=item["code"], name=item["name"]) for item in results]
+    except Exception as e:
+        logger.error(f"Error fetching jurisdictions: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to fetch jurisdictions")
 
 @app.get("/evals/latest", response_model=EvalsResponse, dependencies=[Depends(verify_api_key)], tags=["Evals"], summary="Get Latest Metrics", response_description="Latest evaluation report metrics")
 async def get_latest_evals():
