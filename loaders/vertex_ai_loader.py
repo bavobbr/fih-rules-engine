@@ -12,6 +12,7 @@ from loaders.base import BaseLoader
 from loaders.document_ai_common import DocumentAILayoutMixin
 from loaders.utils import summarize_text
 import config
+import prompts
 
 class VertexAILoader(BaseLoader, DocumentAILayoutMixin):
     """
@@ -163,13 +164,7 @@ class VertexAILoader(BaseLoader, DocumentAILayoutMixin):
             "required": ["sections"]
         }
         
-        prompt = """
-        Analyze the document structure of the attached FIH Rules of Hockey PDF. 
-        Map every page to a section. 
-        Identify the main body (where the actual playing rules start) as 'body'.
-        Identify the definitions section as 'definitions'.
-        Everything else (Preface, Contents, Advertising, End notes) should be 'intro' or 'outro'.
-        """
+        prompt = prompts.get_structure_analysis_prompt()
         
         try:
             response = self.genai_client.models.generate_content(
