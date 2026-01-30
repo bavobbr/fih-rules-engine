@@ -14,7 +14,7 @@ import warnings
 # We are blocked from upgrading google-cloud-storage by langchain-google-vertexai
 warnings.filterwarnings("ignore", module="google.cloud.aiplatform.models")
 warnings.filterwarnings("ignore", category=UserWarning, module="vertexai._model_garden._model_garden_models")
-import tempfile
+
 import config
 from rag_engine import FIHRulesEngine
 from logger import get_logger
@@ -60,71 +60,7 @@ with st.sidebar:
     current_country_code = TOP_50_NATIONS[selected_country_label]
 
     st.divider()
-    st.header("📚 Knowledge Base")
-    
-    uploaded_file = st.file_uploader("Upload Rules PDF", type="pdf")
-
-    # Select which ruleset the uploaded PDF belongs to
-    selected_variant = st.selectbox(
-        "Select Ruleset Variant",
-        options=list(config.VARIANTS.keys()),
-        format_func=lambda x: config.VARIANTS[x]
-    )
-
-    # Context for Ingestion
-    is_national_appendix = st.checkbox("Is this a National Appendix?", value=False)
-    ingest_country_code = None
-    
-    if is_national_appendix:
-        st.info(f"Uploading as Local Rules for: **{selected_country_label}**" if current_country_code else "Please select a country above!")
-        if not current_country_code:
-            st.error("You must select a country (not International) to upload a National Appendix.")
-        else:
-            ingest_country_code = current_country_code
-    
-    # NEW: Append Mode Toggle
-    append_mode = st.checkbox("Append to existing knowledge base? (Don't delete)", value=False, help="If checked, new rules will be added without deleting existing ones for this jurisdiction.")
-
-    if uploaded_file and st.button("Ingest"):
-        if is_national_appendix and not ingest_country_code:
-            st.error("Cannot ingest local rules without a country selected.")
-            st.stop()
-
-        label = f"{config.VARIANTS[selected_variant]} ({ingest_country_code or 'Official'})"
-        with st.spinner(f"Indexing as {label}..."):
-            with tempfile.NamedTemporaryFile(delete=False) as tmp:
-                tmp.write(uploaded_file.getvalue())
-                tmp_path = tmp.name
-            
-            # Persist with selected mode
-            clear_flag = not append_mode
-            count = engine.ingest_pdf(
-                tmp_path, 
-                selected_variant, 
-                country_code=ingest_country_code,
-                original_filename=uploaded_file.name,
-                clear_existing=clear_flag
-            )
-            
-            mode_msg = "Appended" if append_mode else "Replaced"
-            st.success(f"Successfully indexed {count} rules for {label}! ({mode_msg})")
-
-    st.markdown("---")
-    
-    # --- ADMIN/MANAGEMENT SECTION ---
-    with st.expander("⚙️ Manage Knowledge Base"):
-        st.warning("Danger Zone: Delete Rules")
-        
-        target_country = current_country_code # Based on selection above
-        target_variant = selected_variant
-        
-        scope_label = f"{config.VARIANTS[target_variant]} - {selected_country_label}"
-        
-        if st.button(f"🗑️ Delete All Rules for {scope_label}"):
-             with st.spinner("Deleting..."):
-                 engine.db.delete_scoped_data(target_variant, country_code=target_country)
-             st.success(f"Deleted all rules for {scope_label}.")
-
+    st.info("Check `Knowledge Base` in sidebar to manage rules.")
     st.markdown("---")
     st.markdown("👨‍💻 By **Bavo Bruylandt**")
     st.markdown("🔗 [Source Code](https://github.com/bavobbr/langchain-poc)")
