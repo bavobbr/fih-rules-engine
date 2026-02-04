@@ -4,3 +4,4 @@ ragas==0.4.1
 plotly==6.5.0
 pytest
 pytest-mock
+httpx
