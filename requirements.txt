@@ -21,3 +21,4 @@ google-cloud-discoveryengine
 fastapi
 uvicorn
 python-multipart
+slowapi
