@@ -14,6 +14,8 @@ The project is structured around two logical cores: the **Public Core** (Headles
 - `loaders/` – **Vertex AI Loader** logic for structural rule ingestion.
 - `evals/` – **Evaluation Pipeline** for RAGAS metrics and dataset generation.
 - `scripts/` – **Maintenance Scripts** (DB cleanup and ingestion previews).
+- `pages/` – **Admin Pages** (Knowledge Base and metrics UI).
+- `deployment.md` – **Infrastructure Guide** for detailed setup.
 - `Dockerfile` – Container for the Headless Public API.
 - `Dockerfile.admin` – Container for the Admin Dashboard.
 
@@ -69,3 +71,40 @@ The project interacts with the following GCP services:
 The project builds two separate container images:
 - `app-public`: Contains `api.py` and the core RAG engine logic.
 - `app-admin`: Contains `Query.py`, `evals/`, and admin utilities (built via `cloudbuild.admin.yaml`).
+
+---
+
+## 🧠 Agent Context & Workflows
+
+**Context for AI Assistants (Antigravity/Gemini):** This section provides high-density information to reduce discovery time.
+
+### ⚡ Critical Workflows
+**ALWAYS activate the virtual environment** before running python scripts or make commands (unless using `make` which handles some paths, but explicit activation is safer).
+```bash
+source .venv/bin/activate
+```
+
+| Goal | Command Chain |
+| :--- | :--- |
+| **Verify Code** | `source .venv/bin/activate && make fmt lint test` |
+| **Run API** | `make api` (Runs uvicorn with reload) |
+| **Run Admin** | `make admin` (Runs Streamlit) |
+| **Reset DB** | `make db-clean` (Truncates all vectors) |
+| **Run Evals** | `make evals` (Runs RAGAS pipeline) |
+| **Deploy API** | `gcloud run deploy ...` (See `deployment.md`) |
+
+### 🗺️ Critical File Map
+| Feature | Primary File(s) |
+| :--- | :--- |
+| **RAG Logic** | `rag_engine.py` (Core class `FIHRulesEngine`) |
+| **Ingestion** | `loaders/` and `pages/2_Knowledge_Base.py` |
+| **DB Layer** | `database.py` (Postgres + pgvector wrapper) |
+| **Prompts** | `prompts.py` (Centralized system prompts) |
+| **Config** | `config.py` (Env vars and constants) |
+| **UI** | `api.py` (Public REST), `Query.py` (Admin Main), `pages/` (Admin features) |
+
+### 🛡️ Architectural Invariants
+1.  **Headless API**: `api.py` MUST remain pure REST/FastAPI. No HTML serving.
+2.  **Dual-Core**: Admin features (`Query.py`) and Public features (`api.py`) are deployed separately. Shared logic goes in `rag_engine.py`.
+3.  **Secrets**: NEVER hardcode API keys or DB passwords. Use `config.py` which reads `os.getenv`.
+4.  **Deps**: Use `requirements.txt` for minimal prod deps, `requirements-dev.txt` for dev/admin tools.

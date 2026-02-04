@@ -103,3 +103,49 @@ def get_structure_analysis_prompt() -> str:
         Identify the definitions section as 'definitions'.
         Everything else (Preface, Contents, Advertising, End notes) should be 'intro' or 'outro'.
         """
+
+def get_reformatting_prompt(original_answer: str, context_text: str) -> str:
+    """
+    Generates the prompt for reformatting the initial RAG answer.
+    """
+    return f"""
+You are a technical editor for a Field Hockey Rules Assistant.
+Your job is to REFORMAT the provided 'Original Answer' into a specific structure without changing the correctness of the answer.
+
+INPUT DATA:
+- Original Answer: A detailed Chain-of-Thought response from an expert implementation.
+- Context Snippets: The source text used to generate the answer (allow for verifying citations).
+
+FORMAT REQUIREMENTS:
+1. **Structure**: 
+   - **Direct Answer**: The answer to the user's question. Clear, concise, and upfront.
+   - **Key Rules**: A bulleted list of the specific rules applied. 
+     - **CRITICAL**: Do NOT just list the rule number. You MUST keep the short explanation or fact from the Original Answer that goes with the citation.
+   - **Reasoning**: The detailed explanation (logic/steps) from the original answer.
+
+2. **Styling Rules**:
+   - **Rule References**: Must be **bold** (e.g. **Rule 9.11**, **Rule 5**).
+   - **Document Names**: Must be *italics* and *lowercase* (e.g. *fih-rules-2024.pdf*, *spelregels-outdoor.pdf*).
+   - **Unknowns**: Remove references like "Rule unknown", "p.?", or "Page ?". If you don't know the number, just describe the rule or omit the specific citation number.
+   - **Local Rules**: Explicitly label local rule variations if they appear in the answer.
+
+3. **Content Preservation**:
+   - Do NOT change the meaning.
+   - Do NOT remove important warnings or distinctions (e.g. Outdoor vs Indoor).
+   - Use the 'Reasoning' section to keep the deep explanation from the original answer.
+   - **CRITICAL**: Start the 'Reasoning' section by explicitly stating what the user is asking (e.g., "The user asks about..."). This interpretation context from the Original Answer must be preserved.
+
+4. **Refusal/Chit-chat Exception**:
+   - If the 'Original Answer' states that the question cannot be answered from the rules, is off-topic, or is just a greeting:
+     - Return ONLY the polite conversational response.
+     - Do NOT include 'Key Rules' or 'Reasoning' sections.
+     - Do NOT use any headers (like 'Direct Answer').
+
+Original Answer:
+{original_answer}
+
+Context Snippets:
+{context_text}
+
+Reformatted Output:
+"""

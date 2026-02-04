@@ -104,6 +104,33 @@ sequenceDiagram
 
 ---
 
+## 🌍 Local Jurisdictions
+
+The engine goes beyond standard International Rules by supporting **National Appendices** and local rule overrides.
+
+### How it Works
+- **Contextual Awareness**: Users can specify a country code (e.g., `BEL` for Belgium) in their query.
+- **Dual-Path Retrieval**: The engine searches both the **Official International Rules** and the **National Appendix** simultaneously.
+- **Smart Synthesis**: The LLM prioritizes local rules where applicable (e.g., "In Belgium, U14 games play 4x12 minutes") while falling back to international rules for everything else.
+
+### API Usage
+To query with a local context, pass the `country` parameter (ISO 3-letter code) to the chat endpoint:
+```json
+POST /chat
+{
+  "query": "How long is a yellow card?",
+  "country": "BEL"
+}
+```
+
+### Ingestion
+Admins can upload specific **National Appendices** via the **Knowledge Base** page in the Admin Dashboard:
+1. Select the Jurisdiction (e.g., "Belgium").
+2. Check "Is this a National Appendix?".
+3. Upload the PDF.
+
+---
+
 ## 🔍 Hybrid Search Architecture
 
 The engine uses a sophisticated two-stage retrieval process powered by advanced PostgreSQL features to ensure both semantic breadth and keyword precision.
@@ -149,7 +176,7 @@ make dev-install    # Full dependencies (Admin + Evals + Dev)
 ## 🧑‍💻 Operations & Maintenance
 
 The Admin Dashboard (`make admin`) provides a specialized interface for:
-- **Knowledge Ingestion**: Upload rule PDFs and map them to a variant. 
+- **Knowledge Ingestion**: Upload rule PDFs and map them to a variant via the **Knowledge Base** page. 
 - **Automated Overwrites**: Ingesting a ruleset automatically replaces any existing data for that variant.
 - **Performance Monitoring**: Visualizes RAGAS metrics and query traces.
 
