@@ -139,7 +139,7 @@ class FIHRulesEngine:
         logger.info(f"Query: {user_input} [Country: {country_code}]")
         
         # Reformulate & route
-        standalone_query = self._contextualize_query(history, user_input)
+        standalone_query = self._contextualize_query(history, user_input, country_code=country_code)
         logger.info(f"Standalone Query: {standalone_query}")
         
         detected_variant = self._route_query(standalone_query)
@@ -278,11 +278,19 @@ class FIHRulesEngine:
             logger.error(f"Error during reranking: {e}. Falling back to original retrieval.")
             return docs
 
-    def _contextualize_query(self, history, query):
+    def _contextualize_query(self, history, query, country_code=None):
         """Rewrite the latest user message as a standalone query."""
         if not history: return query
+        
+        # Resolve Jurisdiction Label
+        jurisdiction_label = "International"
+        if country_code:
+            # Try to resolve code to name
+            code_to_name = {v: k for k, v in config.TOP_50_NATIONS.items() if v is not None}
+            jurisdiction_label = code_to_name.get(country_code, f"{country_code} National")
+
         history_str = "\n".join([f"{role}: {txt}" for role, txt in history[-4:]])
-        prompt = prompts.get_contextualization_prompt(history_str, query)
+        prompt = prompts.get_contextualization_prompt(history_str, query, jurisdiction_label=jurisdiction_label)
         return self.llm.invoke(prompt).strip()
 
     def _route_query(self, query):

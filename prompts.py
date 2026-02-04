@@ -36,7 +36,7 @@ INSTRUCTIONS:
    - For facts: State the exact measurement or definition from the text.
 STRUCTURE YOUR RESPONSE:
 **Reasoning:**
-*Briefly explain the logic: "Since the defender committed an offence in the circle..."*
+*Explain the logic followed to arrive at the answer step by step. Example: "Since the defender committed an offence in the circle..."*
 
 **Answer:**
 - Start with a human-friendly summary.
@@ -58,7 +58,7 @@ QUESTION:
 ANSWER:
 """
 
-def get_contextualization_prompt(history_str: str, query: str) -> str:
+def get_contextualization_prompt(history_str: str, query: str, jurisdiction_label: str = "International") -> str:
     """
     Generates the prompt for contextualizing a follow-up question.
     """
@@ -67,6 +67,10 @@ def get_contextualization_prompt(history_str: str, query: str) -> str:
 YOUR GOAL:
 Rephrase the 'Follow Up Input' to be a standalone question, using the 'Chat History' ONLY to resolve pronouns (it, they, that) or ambiguous references to the previous topic.
 Keep the language as used, if not sure use english.
+
+CONTEXT INFORMATION:
+The user is currently asking about rules in this jurisdiction: **{jurisdiction_label}**.
+If the user says "here", "in my country", "locally", or "this jurisdiction", they are referring to **{jurisdiction_label}**.
 
 RULES:
 1. If the 'Follow Up Input' is a valid follow-up question, rewrite it to be fully self-contained including the hockey variant.
