@@ -60,7 +60,7 @@ class SequentialLoader(BaseLoader):
         for doc in chunks:
             doc.metadata["variant"] = variant
             if original_filename:
-                doc.metadata["source"] = original_filename
+                doc.metadata["source_file"] = original_filename
             final_docs.append(doc)
             
         return final_docs

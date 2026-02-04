@@ -12,6 +12,7 @@ from logger import get_logger
 
 from loaders.vertex_ai_loader import VertexAILoader
 from loaders.sequential_loader import SequentialLoader
+import prompts
 
 logger = get_logger(__name__)
 
@@ -138,7 +139,7 @@ class FIHRulesEngine:
         logger.info(f"Query: {user_input} [Country: {country_code}]")
         
         # Reformulate & route
-        standalone_query = self._contextualize_query(history, user_input)
+        standalone_query = self._contextualize_query(history, user_input, country_code=country_code)
         logger.info(f"Standalone Query: {standalone_query}")
         
         detected_variant = self._route_query(standalone_query)
@@ -219,38 +220,14 @@ class FIHRulesEngine:
 
         jurisdiction_label = f"{country_code} National" if country_code else "International"
 
-        full_prompt = f"""
-You are an expert FIH international Field Hockey Umpire for {detected_variant} hockey, answering questions for jurisdiction: **{jurisdiction_label}**.
-
-HIERARCHY RULE - CRITICAL:
-1. You are provided with a mix of 'OFFICIAL' rules and 'LOCAL' ({country_code}) rules.
-2. If a 'LOCAL' rule conflicts with an 'OFFICIAL' rule, the **LOCAL rule completely overrides** the official rule for this user.
-3. If no local rule exists for a specific situation, apply the standard official rule.
-
-MULTILINGUAL INSTRUCTION:
-The context may contain rules in different languages (e.g. English, Dutch, German). 
-Answer the user's question in the language they asked (usually English), translating the rule content if necessary.
-
-STRUCTURE YOUR RESPONSE:
-- Start with a human-friendly, summary of the answer.
-- If applying a Local Rule, explicitly state: *"In {country_code}, the rule is..."*
-- Follow with a **markdown bulleted list** of technical details derived ONLY from the provided CONTEXT.
-
-CITATION RULES:
-- For each bullet point, cite the source.
-- Use **(Rule <rule>)** or **(Page <page>)**.
-- IMPORTANT: If the rule number or page is unknown/missing in the context, DO NOT invent one or write "(Rule unknown)". Just OMIT the specific citation.
-- If it is a local rule, append **(local rule)** to the end of the bullet point.
-
-CONTEXT:
-{context_text}
-
-QUESTION:
-{standalone_query}
-
-ANSWER:
-"""
-        # logger.info(f"Full Prompt: {full_prompt}")
+        full_prompt = prompts.get_rag_answer_prompt(
+            detected_variant=detected_variant,
+            jurisdiction_label=jurisdiction_label,
+            country_code=country_code,
+            context_text=context_text,
+            standalone_query=standalone_query
+        )
+        logger.info(f"Full Prompt: {full_prompt}")
         answer = self.llm.invoke(full_prompt)
         logger.info(f"Received AI response ({len(answer)} chars)")
         
@@ -301,31 +278,22 @@ ANSWER:
             logger.error(f"Error during reranking: {e}. Falling back to original retrieval.")
             return docs
 
-    def _contextualize_query(self, history, query):
+    def _contextualize_query(self, history, query, country_code=None):
         """Rewrite the latest user message as a standalone query."""
         if not history: return query
+        
+        # Resolve Jurisdiction Label
+        jurisdiction_label = "International"
+        if country_code:
+            # Try to resolve code to name
+            code_to_name = {v: k for k, v in config.TOP_50_NATIONS.items() if v is not None}
+            jurisdiction_label = code_to_name.get(country_code, f"{country_code} National")
+
         history_str = "\n".join([f"{role}: {txt}" for role, txt in history[-4:]])
-        prompt = f"""Given the following conversation and a follow up user input about Field Hockey.
-
-YOUR GOAL:
-Rephrase the 'Follow Up Input' to be a standalone question, using the 'Chat History' ONLY to resolve pronouns (it, they, that) or ambiguous references to the previous topic.
-
-RULES:
-1. If the 'Follow Up Input' is a valid follow-up question, rewrite it to be fully self-contained including the hockey variant.
-2. If the 'Follow Up Input' is completely unrelated to the previous context or is gibberish/nonsense, DO NOT change it. Return it exactly as is (but still add the variant tag).
-3. Do NOT attempt to answer the question.
-4. First analyze the hockey variant (outdoor, indoor, hockey5s) from the context. Default to 'outdoor' if unclear.
-5. Prepend the variant in a strict format: [VARIANT: <variant>]
-
-Chat History:
-{history_str}
-
-Follow Up Input: {query}
-
-Standalone Question:"""
+        prompt = prompts.get_contextualization_prompt(history_str, query, jurisdiction_label=jurisdiction_label)
         return self.llm.invoke(prompt).strip()
 
     def _route_query(self, query):
         """Return 'outdoor' | 'indoor' | 'hockey5s' based on content."""
-        prompt = f"Analyze Field Hockey question and categorize it as outdoor, indoor or hockey5s variant. Return 'outdoor', 'indoor', or 'hockey5s'. Default to 'outdoor'.\nQUESTION: {query}"
+        prompt = prompts.get_routing_prompt(query)
         return self.llm.invoke(prompt).strip().lower().replace("'", "").replace('"', "")

@@ -280,6 +280,50 @@ class PostgresVectorDB:
             result = conn.execute(stmt).fetchall()
             return [row[0] for row in result]
 
+    def get_source_stats(self):
+        """Return statistics on ingested documents.
+        
+        Returns:
+            List of dicts: [{
+                'source_file': str, 
+                'variant': str, 
+                'country': str (or 'Official'), 
+                'chunk_count': int
+            }, ...]
+        """
+        with self.pool.connect() as conn:
+            # Group by source_file and key metadata
+            # We treat NULL country as 'Official'
+            stmt = text(f"""
+                SELECT 
+                    metadata->>'source_file' as source_file,
+                    variant,
+                    COALESCE(metadata->>'country', 'Official') as country,
+                    COUNT(*) as chunk_count
+                FROM {config.TABLE_NAME}
+                GROUP BY 1, 2, 3
+                ORDER BY 3, 2, 1
+            """)
+            result = conn.execute(stmt).fetchall()
+            
+            return [
+                {
+                    "source_file": row[0] or "Unknown Source", 
+                    "variant": row[1], 
+                    "country": row[2], 
+                    "chunk_count": row[3]
+                } 
+                for row in result
+            ]
+
+    def delete_source_file(self, filename):
+        """Delete all chunks belonging to a specific source file."""
+        with self.pool.connect() as conn:
+            logger.info(f"Deleting source file: {filename}")
+            stmt = text(f"DELETE FROM {config.TABLE_NAME} WHERE metadata->>'source_file' = :filename")
+            conn.execute(stmt, {"filename": filename})
+            conn.commit()
+
 import json
 def import_json_dump(d):
     return json.dumps(d)
