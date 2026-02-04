@@ -47,7 +47,7 @@ def test_ingest_pdf_success(mock_engine):
         result = mock_engine.ingest_pdf("dummy.pdf", "indoor")
         
         assert result == 2
-        mock_engine.db.delete_variant.assert_called_with("indoor")
+        mock_engine.db.delete_scoped_data.assert_called_with("indoor", country_code=None)
         mock_engine.embeddings.embed_documents.assert_called()
         mock_engine.db.insert_batch.assert_called()
 
