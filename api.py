@@ -161,6 +161,39 @@ async def get_jurisdictions():
         logger.error(f"Error fetching jurisdictions: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to fetch jurisdictions")
 
+class DocumentStat(BaseModel):
+    source_file: str = Field(..., description="The name of the source PDF file")
+    variant: str = Field(..., description="The ruleset variant (e.g., 'outdoor')")
+    country: str = Field(..., description="The country code or 'Official' for global rules")
+    chunk_count: int = Field(..., description="Number of text chunks generated from this file")
+
+@app.get("/knowledge-base", response_model=List[DocumentStat], tags=["System"], summary="List Knowledge Base Documents", response_description="List of all ingested source documents")
+async def get_knowledge_base():
+    """
+    List all source documents currently ingested in the knowledge base.
+    
+    For each document, returns the filename, variant, applicable country (or 'Official'), 
+    and the number of chunks.
+    """
+    if engine is None:
+        raise HTTPException(status_code=503, detail="Engine not ready")
+    
+    try:
+        # engine.db is accessible directly
+        stats = engine.db.get_source_stats()
+        return [
+            DocumentStat(
+                source_file=item["source_file"],
+                variant=item["variant"],
+                country=item["country"],
+                chunk_count=item["chunk_count"]
+            )
+            for item in stats
+        ]
+    except Exception as e:
+        logger.error(f"Error fetching knowledge base stats: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to fetch knowledge base stats")
+
 @app.get("/evals/latest", response_model=EvalsResponse, dependencies=[Depends(verify_api_key)], tags=["Evals"], summary="Get Latest Metrics", response_description="Latest evaluation report metrics")
 async def get_latest_evals():
     """
