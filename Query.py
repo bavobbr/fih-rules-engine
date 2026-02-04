@@ -88,13 +88,28 @@ def handle_query(query_text):
             # Query the engine with recent message history
             result = engine.query(query_text, history=history_list, country_code=current_country_code)
             
-            st.markdown(result["answer"])
+            answer_text = result["answer"]
+            
+            # PARSING: Check for "Reasoning" section to collapse it
+            # The prompt uses "**Reasoning**:" as the delimiter
+            marker = "**Reasoning**:"
+            if marker in answer_text:
+                parts = answer_text.split(marker, 1)
+                main_content = parts[0].strip()
+                reasoning_content = parts[1].strip()
+                
+                st.markdown(main_content)
+                with st.expander("📝 Reasoning & Analysis"):
+                    st.markdown(reasoning_content)
+            else:
+                # Fallback for simple answers (refusals/chit-chat)
+                st.markdown(answer_text)
             
             # Store debug info for persistent display
             st.session_state.last_debug = result
             
     st.session_state.messages.append({"role": "user", "content": query_text})
-    st.session_state.messages.append({"role": "assistant", "content": result["answer"]})
+    st.session_state.messages.append({"role": "assistant", "content": answer_text})
 
 # Determine input source: Starter Buttons OR Chat Input
 final_prompt = None

@@ -231,8 +231,14 @@ class FIHRulesEngine:
         answer = self.llm.invoke(full_prompt)
         logger.info(f"Received AI response ({len(answer)} chars)")
         
+        # --- SECOND PASS: REFORMATTING ---
+        logger.info("Starting Second Pass (Reformatting)...")
+        final_answer = self._reformat_response(answer, context_text)
+        logger.info(f"Reformatting complete ({len(final_answer)} chars)")
+        
         return {
-            "answer": answer,
+            "answer": final_answer,
+            "original_answer": answer,
             "standalone_query": standalone_query,
             "variant": detected_variant,
             "source_docs": docs
@@ -297,3 +303,11 @@ class FIHRulesEngine:
         """Return 'outdoor' | 'indoor' | 'hockey5s' based on content."""
         prompt = prompts.get_routing_prompt(query)
         return self.llm.invoke(prompt).strip().lower().replace("'", "").replace('"', "")
+
+    def _reformat_response(self, original_answer, context_text):
+        """
+        Uses a second LLM pass to reformat the answer into:
+        Answer > Citations > Reasoning.
+        """
+        reformat_prompt = prompts.get_reformatting_prompt(original_answer, context_text)
+        return self.llm.invoke(reformat_prompt)
