@@ -128,3 +128,24 @@ Once running, access the dashboard locally at [http://localhost:8501](http://loc
 
 > [!TIP]
 > Use `gcloud run services update --update-env-vars` if you only need to change a single variable without overwriting the entire environment.
+
+## 7. Model Endpoints & Data Residency
+
+The LLM (`config.LLM_MODEL`, currently `gemini-3.5-flash-lite`) is served from Vertex AI's
+**`global`** endpoint. Gemini 3.x is not offered on any regional endpoint — `europe-west1`,
+`europe-west4`, `europe-north1` and `us-central1` all return `404 Publisher Model not found`.
+
+Embeddings (`text-embedding-004`) and the Ranking API stay on `$REGION` (`europe-west1`), so
+retrieval and vector storage remain EU-regional. Only prompt/response traffic for the LLM leaves
+the regional boundary.
+
+Override with `GCP_LLM_LOCATION` if a regional Gemini endpoint becomes available:
+
+```bash
+gcloud run services update fih-rag-api \
+    --region $REGION \
+    --update-env-vars "GCP_LLM_LOCATION=europe-west1"
+```
+
+> [!WARNING]
+> `gemini-2.5-flash-lite` is retired on **2026-10-16**. Do not pin back to it.

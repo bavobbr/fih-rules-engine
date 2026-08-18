@@ -24,7 +24,7 @@ The system follows a **Dual-Core Architecture**, separating the public-facing AP
 | **Ingestion** | **Vertex AI + DocAI** | Structural parsing and AI-driven enrichment. |
 | **Hybrid Search** | **Postgres (FTS + pgvector)** | Multi-stage retrieval combining semantic and keyword search via RRF. |
 | **Reranker** | **Vertex AI Ranking** | Cross-encoder reranking to optimize context relevance. |
-| **Reasoning** | **Gemini 2.0 Flash Lite** | State-of-the-art LLM for synthesis and reasoning. |
+| **Reasoning** | **Gemini 3.5 Flash Lite** | State-of-the-art LLM for synthesis and reasoning. |
 
 ### 🛠️ The Architectural Stack
 

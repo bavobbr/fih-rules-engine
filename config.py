@@ -35,8 +35,13 @@ DB_PASS = os.getenv("DB_PASS")  # Required; do not set a default here
 
 # Model Config
 EMBEDDING_MODEL = "text-embedding-004"
-LLM_MODEL = "gemini-2.5-flash-lite"
+LLM_MODEL = "gemini-3.5-flash-lite"
 RANKING_MODEL = "semantic-ranker-512@latest"
+
+# Gemini 3.x is only served from the "global" endpoint - it is not available on
+# any regional endpoint (europe-west1 included). Embeddings and the Ranking API
+# remain regional, so the LLM needs its own location.
+LLM_LOCATION = os.getenv("GCP_LLM_LOCATION", "global")
 RETRIEVAL_K = 15
 RANKING_TOP_N = 10
 

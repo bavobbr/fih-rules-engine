@@ -28,7 +28,7 @@ class VertexAILoader(BaseLoader, DocumentAILayoutMixin):
         self.genai_client = genai.Client(
             vertexai=True, 
             project=config.PROJECT_ID, 
-            location=config.REGION,
+            location=config.LLM_LOCATION,
             http_options=types.HttpOptions(api_version="v1")
         )
         # self.docai_loader is not needed as we implement custom batch logic here
@@ -134,7 +134,7 @@ class VertexAILoader(BaseLoader, DocumentAILayoutMixin):
             self._delete_gcs_blob(temp_filename)
 
     def _analyze_structure(self, file_path: str) -> Dict[str, Any]:
-        """Call Gemini 1.5 Pro to map the PDF."""
+        """Call the configured Gemini model to map the PDF."""
         model_name = config.LLM_MODEL
         
         with open(file_path, "rb") as f:

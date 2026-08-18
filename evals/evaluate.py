@@ -24,7 +24,7 @@ class BotEvaluator:
         self.judge_llm = VertexAI(
             model_name=config.LLM_MODEL,
             project=config.PROJECT_ID,
-            location=config.REGION,
+            location=config.LLM_LOCATION,
             temperature=0, # Zero temp for consistent grading
             max_retries=3
         )
