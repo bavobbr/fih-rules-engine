@@ -1,0 +1,618 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "FIH Rules API",
+    "description": "\nAsk questions about the field hockey rules and get an answer grounded in the official FIH rulebooks\n(Outdoor, Indoor, Hockey5s), optionally combined with a country's national rules.\n\n## Authentication\n`POST /chat` and `GET /evals/latest` require the header `x-api-key: <key>`. A missing header returns\n`422`, a wrong key `403`. The other endpoints are public.\n\n## Typical client flow\n1. `GET /jurisdictions` once, to fill a country picker. Offer \"International\" (no country) as the default.\n2. `POST /chat` per user message. Send the earlier turns in `history` and the picked country code in `country`.\n3. Render `answer` as **Markdown**. Optionally show `source_docs` as expandable sources.\n\n## Answer format\n`answer` is Markdown with three labelled sections, each label on its own line:\n\n```\n**Direct Answer**\nA green card suspension lasts 2 minutes of playing time.\n\n**Key Rules**\n- **Rule 14.1**: A green card is a warning with a 2-minute suspension. *(fih-rules-of-hockey-2026-final.pdf, p. 45)*\n\n**Reasoning**\nThe user asks for the duration of a green card suspension. ...\n```\n\n- **Key Rules** bullets start with a bold rule number when known, end with an italic *(file, p. page)* citation,\n  and end with `(local rule)` when the rule comes from the selected country's national rules.\n  The section is left out when no specific rule applies.\n- Off-topic questions, greetings and questions the rules do not cover return **one plain sentence**\n  without any section labels.\n- The answer is written in the language of the question.\n\n## Hockey variant\nThe variant (outdoor, indoor or hockey5s) is detected from the question and the history; there is no request\nfield for it. Mention the variant in the question (\"In indoor hockey, ...\") to steer it. The detected variant is\nreturned in `variant`.\n\n## Timing and errors\n- A typical answer takes 3-6 seconds. After a period without traffic, the first request can take up to\n  ~30 seconds extra (Cloud Run cold start). Use a client timeout of at least 60 seconds.\n- `503` means the engine is still starting: retry after a few seconds. `500` is an internal error: show a\n  generic \"try again\" message. Both return `{\"detail\": \"...\"}`.\n",
+    "version": "1.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Health Check",
+        "description": "Check if the API and the RAG engine are initialized and healthy.\n\nReturns a 200 status if healthy, or 503 if the engine is not initialized.",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Service health status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The engine is still starting. Retry after a few seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "summary": "Ask a rules question",
+        "description": "Answer a field hockey rules question.\n\nThe question is combined with the history to resolve follow-ups, the hockey variant is detected,\nthe official rules (plus the national rules of `country`, if given) are searched, and an answer is\nwritten from the best-matching rules only. See the API description for the `answer` format.",
+        "operationId": "chat_chat_post",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Markdown answer with the rule snippets it is based on",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wrong `x-api-key` header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error. Show a generic 'try again' message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The engine is still starting. Retry after a few seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jurisdictions": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "List Available Jurisdictions",
+        "description": "List all jurisdictions (countries) that have local rules currently ingested in the knowledge base.\n\nReturns a list of objects containing the country code and full name. Use `code` as the `country`\nfield of `POST /chat`. \"International\" (official rules only) is not in the list: offer it as the\ndefault choice yourself.",
+        "operationId": "get_jurisdictions_jurisdictions_get",
+        "responses": {
+          "200": {
+            "description": "List of countries with local rules ingested, sorted by name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Jurisdiction"
+                  },
+                  "type": "array",
+                  "title": "Response Get Jurisdictions Jurisdictions Get"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error. Show a generic 'try again' message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The engine is still starting. Retry after a few seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/knowledge-base": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "List Knowledge Base Documents",
+        "description": "List all source documents currently ingested in the knowledge base.\n\nFor each document, returns the filename, variant, applicable country (or 'Official'), \nand the number of chunks.",
+        "operationId": "get_knowledge_base_knowledge_base_get",
+        "responses": {
+          "200": {
+            "description": "List of all ingested source documents",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentStat"
+                  },
+                  "type": "array",
+                  "title": "Response Get Knowledge Base Knowledge Base Get"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error. Show a generic 'try again' message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The engine is still starting. Retry after a few seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/evals/latest": {
+      "get": {
+        "tags": [
+          "Evals"
+        ],
+        "summary": "Get Latest Metrics",
+        "description": "Retrieve the most recent evaluation metrics generated by the synthetic evaluation pipeline.\n\nThe metrics include both custom calculations (accuracy, hit rate) and RAGAS scores \n(faithfulness, relevancy, etc.).",
+        "operationId": "get_latest_evals_evals_latest_get",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Latest evaluation report metrics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvalsResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wrong `x-api-key` header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No evaluation report available.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error. Show a generic 'try again' message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ChatRequest": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "title": "Query",
+            "description": "The user's new question.",
+            "examples": [
+              "And a yellow card?"
+            ]
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/Message"
+            },
+            "type": "array",
+            "title": "History",
+            "description": "Earlier turns of this conversation, oldest first, without the current `query`. Used to understand follow-ups like 'and a yellow card?'; only the last 4 messages are used. Send an empty list to start a new conversation.",
+            "default": [],
+            "examples": [
+              [
+                {
+                  "content": "How long is a green card suspension?",
+                  "role": "user"
+                },
+                {
+                  "content": "**Direct Answer**\nA green card suspension lasts 2 minutes of playing time.",
+                  "role": "assistant"
+                }
+              ]
+            ]
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country",
+            "description": "3-letter country code from `GET /jurisdictions` (e.g. 'BEL') to include that country's national rules, which override the official rules where they differ. Omit or send null for the international rules only. An unknown code behaves like no country.",
+            "examples": [
+              "BEL"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "title": "ChatRequest"
+      },
+      "ChatResponse": {
+        "properties": {
+          "answer": {
+            "type": "string",
+            "title": "Answer",
+            "description": "The answer as Markdown: '**Direct Answer**', '**Key Rules**' and '**Reasoning**' sections, or one plain sentence for off-topic questions. See the API description for details."
+          },
+          "standalone_query": {
+            "type": "string",
+            "title": "Standalone Query",
+            "description": "The question rewritten to stand on its own using the history (useful for debugging; no need to show it)."
+          },
+          "variant": {
+            "type": "string",
+            "title": "Variant",
+            "description": "Detected hockey variant: 'outdoor', 'indoor' or 'hockey5s'."
+          },
+          "source_docs": {
+            "items": {
+              "$ref": "#/components/schemas/SourceDoc"
+            },
+            "type": "array",
+            "title": "Source Docs",
+            "description": "The rule snippets the answer is based on, most relevant first (at most 10). Empty if nothing relevant was found."
+          }
+        },
+        "type": "object",
+        "required": [
+          "answer",
+          "standalone_query",
+          "variant",
+          "source_docs"
+        ],
+        "title": "ChatResponse"
+      },
+      "DocumentStat": {
+        "properties": {
+          "source_file": {
+            "type": "string",
+            "title": "Source File",
+            "description": "The name of the source document (PDF, Word or text file)"
+          },
+          "variant": {
+            "type": "string",
+            "title": "Variant",
+            "description": "The ruleset variant (e.g., 'outdoor')"
+          },
+          "country": {
+            "type": "string",
+            "title": "Country",
+            "description": "The country code or 'Official' for global rules"
+          },
+          "chunk_count": {
+            "type": "integer",
+            "title": "Chunk Count",
+            "description": "Number of text chunks generated from this file"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_file",
+          "variant",
+          "country",
+          "chunk_count"
+        ],
+        "title": "DocumentStat"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "description": "Human-readable error message.",
+            "examples": [
+              "Engine not ready"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "ErrorResponse"
+      },
+      "EvalsMetrics": {
+        "properties": {
+          "custom_metrics": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Custom Metrics",
+            "description": "Custom metrics calculated during evaluation (e.g., accuracy, hit rate)"
+          },
+          "ragas_metrics": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Ragas Metrics",
+            "description": "RAGAS-specific metrics (e.g., faithfulness, answer relevancy)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "custom_metrics",
+          "ragas_metrics"
+        ],
+        "title": "EvalsMetrics"
+      },
+      "EvalsResponse": {
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp",
+            "description": "ISO 8601 timestamp of when the evaluation report was generated"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/EvalsMetrics",
+            "description": "The evaluation metrics"
+          }
+        },
+        "type": "object",
+        "required": [
+          "timestamp",
+          "metrics"
+        ],
+        "title": "EvalsResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "'ok' when the engine is ready.",
+            "examples": [
+              "ok"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "HealthResponse"
+      },
+      "Jurisdiction": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "ISO 3-letter country code (e.g. 'BEL')"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Full country name (e.g. 'Belgium')"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name"
+        ],
+        "title": "Jurisdiction"
+      },
+      "Message": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "title": "Role",
+            "description": "Who sent the message: 'user' or 'assistant'.",
+            "examples": [
+              "user"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "title": "Content",
+            "description": "The message text. For 'assistant' messages, send the `answer` you received back unchanged.",
+            "examples": [
+              "How long is a green card suspension?"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "Message"
+      },
+      "SourceDoc": {
+        "properties": {
+          "page_content": {
+            "type": "string",
+            "title": "Page Content",
+            "description": "The rule text that was given to the model."
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata",
+            "description": "Where the text comes from. Keys present depend on the source; treat all as optional:\n- `source_file` (string): document file name\n- `type` (string): 'official' (FIH rulebook) or 'local' (national rules)\n- `country` (string): country code, only for local rules\n- `variant` (string): 'outdoor', 'indoor' or 'hockey5s'\n- `page` (integer): page number, official rulebooks only\n- `rule`, `chapter`, `section` (string): position in the official rulebook; placeholder values like 'N/A' or 'General' mean unknown\n- `summary` (string): short human-readable label, official rulebooks only\nOther keys are internal and may change.",
+            "examples": [
+              {
+                "chapter": "PLAYING THE GAME",
+                "page": 45,
+                "rule": "14.1",
+                "section": "14 Personal penalties",
+                "source_file": "fih-rules-of-hockey-2026-final.pdf",
+                "summary": "Green, yellow and red card suspensions and their durations.",
+                "type": "official",
+                "variant": "outdoor"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "page_content",
+          "metadata"
+        ],
+        "title": "SourceDoc"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

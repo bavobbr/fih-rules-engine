@@ -83,21 +83,20 @@ sequenceDiagram
     participant Rank as Vertex AI Ranking
     participant DB as Cloud SQL (Postgres)
 
-    Client->>API: POST /chat {query}
-    API->>Engine: query(text, history)
-    Engine->>Vertex: _contextualize_query(history)
-    Vertex-->>Engine: Standalone Question
-    Engine->>Vertex: _route_query(question)
-    Vertex-->>Engine: Variant (e.g. "indoor")
-    Engine->>Vertex: embed_query(clean_question)
+    Client->>API: POST /chat {query, history, country}
+    API->>Engine: query(text, history, country)
+    Engine->>Vertex: _plan_query(history, question)
+    Vertex-->>Engine: {variant, standalone question, keywords}
+    Engine->>Vertex: embed_query(question)
     Vertex-->>Engine: Vector
-    Engine->>DB: search_hybrid(question, vector)
-    Note over DB: Semantic (pgvector) + Keyword (FTS)
+    Engine->>DB: search_hybrid(question, vector, keywords)
+    Note over DB: Semantic (pgvector) + Keyword (FTS on OR-ed keywords)
     DB-->>Engine: Ranked Candidates (RRF)
     Engine->>Rank: rank(question, candidates)
     Rank-->>Engine: Re-ordered Top Context
-    Engine->>Vertex: Generate Answer (Context + Question)
-    Vertex-->>Engine: Expert Response
+    Engine->>Vertex: Generate Answer as JSON (Context + Question)
+    Vertex-->>Engine: {direct_answer, key_rules, reasoning}
+    Note over Engine: Render Markdown answer
     Engine-->>API: Result Object
     API-->>Client: 200 OK {answer, sources}
 ```
@@ -114,6 +113,9 @@ The engine goes beyond standard International Rules by supporting **National App
 - **Smart Synthesis**: The LLM prioritizes local rules where applicable (e.g., "In Belgium, U14 games play 4x12 minutes") while falling back to international rules for everything else.
 
 ### API Usage
+The full client contract is in [`docs/API.md`](docs/API.md) (integration guide) and
+[`docs/openapi.json`](docs/openapi.json) (OpenAPI 3, regenerate with `make openapi`).
+
 To query with a local context, pass the `country` parameter (ISO 3-letter code) to the chat endpoint:
 ```json
 POST /chat

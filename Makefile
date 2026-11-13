@@ -1,6 +1,6 @@
 PY=.venv/bin/python
 
-.PHONY: install dev-install api web admin evals db-clean ingest-preview test fmt lint
+.PHONY: install dev-install api openapi web admin evals db-clean ingest-preview test fmt lint
 
 install:
 	$(PY) -m pip install -r requirements.txt
@@ -12,6 +12,9 @@ dev-install:
 # --- Public Services ---
 api:
 	$(PY) -m uvicorn api:app --host 0.0.0.0 --port 8000 --reload
+
+openapi:
+	$(PY) scripts/export_openapi.py
 
 # --- Admin Operations ---
 admin:
