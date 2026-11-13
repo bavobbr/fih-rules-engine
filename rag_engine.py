@@ -45,17 +45,25 @@ class FIHRulesEngine:
         self.loader_local = SequentialLoader(chunk_size=1000, chunk_overlap=200)
 
     # Ingestion
-    def ingest_pdf(self, file_path, variant, country_code=None, original_filename=None, clear_existing=True):
-        """Parse a PDF, chunk, embed and persist under a ruleset variant.
-        
+    def ingest_pdf(self, file_path, variant, country_code=None, original_filename=None, replaces=None):
+        """Parse a document, chunk, embed and persist under a ruleset variant.
+
+        Existing chunks of a document with the same file name in this scope (variant + country) are
+        replaced; other documents in the scope are kept.
+
         Args:
-            country_code: 3-letter ISO/FIH code (e.g. 'BEL'). If None, treats as Official Rules.
-            clear_existing: If True, deletes existing rules for this scope before ingesting (Replace Mode).
-                            If False, keeps existing rules and adds new ones (Append Mode).
+            country_code: 3-letter ISO/FIH code (e.g. 'BEL'). If None, treats as Official Rules (PDF only).
+            replaces: Optional file name of another document in this scope to remove (e.g. last year's version).
         """
+        import os
+
         # 0. Validate Input
         if variant not in config.VARIANTS:
             raise ValueError(f"Invalid variant '{variant}'. Allowed: {list(config.VARIANTS.keys())}")
+
+        source_file = original_filename or os.path.basename(file_path)
+        if not country_code and not source_file.lower().endswith(".pdf"):
+            raise ValueError("Official FIH rulebooks must be a PDF (structure analysis needs page layout).")
 
         # 1. Ensure Schema
         self.db.ensure_schema()
@@ -89,12 +97,10 @@ class FIHRulesEngine:
             logger.warning("No chunks generated!")
             return 0
         
-        # Deduplication: scoped deletion (Only if clear_existing is True)
-        if clear_existing:
-            logger.info(f"Cleaning existing data for variant='{variant}', country='{country_code}'...")
-            self.db.delete_scoped_data(variant, country_code=country_code)
-        else:
-            logger.info(f"Append Mode: Preserving existing data for variant='{variant}', country='{country_code}'.")
+        # Deduplication: replace this document (and the one it supersedes) within the scope only
+        for filename in dict.fromkeys(f for f in (source_file, replaces) if f):
+            logger.info(f"Removing existing '{filename}' for variant='{variant}', country='{country_code}'...")
+            self.db.delete_source_file(filename, variant, country_code=country_code)
         
         # Embed
         logger.info(f"Generating embeddings for {len(docs)} chunks...")

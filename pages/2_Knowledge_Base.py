@@ -22,73 +22,106 @@ db = engine.db
 
 # --- INGESTION SECTION ---
 with st.expander("📤 Import New Rules", expanded=False):
-    st.info("Upload PDF rulebooks or national appendices here.")
-    
-    c1, c2 = st.columns(2)
-    
-    with c1:
-        # Select Jurisduciton for Ingestion
+    # 1. What is being imported decides the jurisdiction (no separate checkbox to forget)
+    import_kind = st.radio(
+        "What are you importing?",
+        options=["official", "national"],
+        format_func=lambda x: "Official FIH rulebook" if x == "official" else "National rules for a country",
+        horizontal=True,
+        key="ingest_kind"
+    )
+    is_official = import_kind == "official"
+
+    ingest_country_code = None
+    if not is_official:
+        countries = {name: code for name, code in config.TOP_50_NATIONS.items() if code}
         selected_country_label = st.selectbox(
-            "Select Jurisdiction",
-            options=list(config.TOP_50_NATIONS.keys()),
-            index=0,
+            "Country",
+            options=list(countries),
+            index=None,
+            placeholder="Choose a country",
             key="ingest_country"
         )
-        ingest_country_code = config.TOP_50_NATIONS[selected_country_label]
-    
-    with c2:
-        # Select Ruleset Variant
-        selected_variant = st.selectbox(
-            "Select Ruleset Variant",
-            options=list(config.VARIANTS.keys()),
-            format_func=lambda x: config.VARIANTS[x],
-            key="ingest_variant"
-        )
+        ingest_country_code = countries.get(selected_country_label)
 
-    uploaded_file = st.file_uploader("Upload Rules PDF", type="pdf")
-    
-    # Context Options
-    is_national_appendix = st.checkbox("Is this a National Appendix?", value=False)
-    append_mode = st.checkbox("Append to existing knowledge base? (Don't delete)", value=False, help="If checked, new rules will be added without deleting existing ones for this jurisdiction.")
+    selected_variant = st.selectbox(
+        "Variant",
+        options=list(config.VARIANTS.keys()),
+        format_func=lambda x: config.VARIANTS[x],
+        key="ingest_variant"
+    )
+    variant_label = config.VARIANTS[selected_variant]
 
-    if uploaded_file and st.button("Ingest Document"):
-        # Validation
-        if is_national_appendix and not ingest_country_code:
-            st.error("You must select a country (not International) to upload a National Appendix.")
+    uploaded_file = st.file_uploader(
+        "File",
+        type=["pdf"] if is_official else ["pdf", "docx", "txt"],
+        help="Official rulebooks must be PDF (page layout is analysed). National rules are read as plain text."
+    )
+
+    if not is_official and not ingest_country_code:
+        st.caption("Choose a country to see what is already imported.")
+    else:
+        scope_label = "official FIH rulebook" if is_official else f"{selected_country_label} national rules"
+        existing_docs = db.get_scope_documents(selected_variant, country_code=ingest_country_code)
+        chunk_counts = {d["source_file"]: d["chunk_count"] for d in existing_docs}
+
+        if existing_docs:
+            listing = "\n".join(f"- *{name}* ({count} chunks)" for name, count in chunk_counts.items())
+            st.markdown(f"**Already imported for {scope_label} · {variant_label}**\n{listing}")
         else:
-            label = f"{config.VARIANTS[selected_variant]} ({ingest_country_code or 'Official'})"
-            with st.spinner(f"Indexing as {label}..."):
-                try:
-                    with tempfile.NamedTemporaryFile(delete=False) as tmp:
-                        tmp.write(uploaded_file.getvalue())
-                        tmp_path = tmp.name
-                    
-                    # Persist with selected mode
-                    clear_flag = not append_mode
-                    
-                    # Use the code if national appendix is checked, otherwise Official (None)
-                    # Use explicit logic: If National App -> Use Code. If not -> Use None (Official).
-                    # But wait, what if I select Belgium but NOT National Appendix? 
-                    # The UI implies "Jurisdiction" is the target. 
-                    # If I select Belgium and NOT "National Appendix", does that mean I'm uploading Official Rules FOR Belgium? no.
-                    # Let's align with Query.py logic:
-                    final_country_code = ingest_country_code if is_national_appendix else None
-                    
-                    count = engine.ingest_pdf(
-                        tmp_path, 
-                        selected_variant, 
-                        country_code=final_country_code,
-                        original_filename=uploaded_file.name,
-                        clear_existing=clear_flag
-                    )
-                    
-                    mode_msg = "Appended" if append_mode else "Replaced"
-                    st.success(f"Successfully indexed {count} rules for {label}! ({mode_msg})")
-                    time.sleep(1)
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Ingestion failed: {e}")
-                    logger.error("Ingestion failed", exc_info=True)
+            st.caption(f"Nothing imported yet for {scope_label} · {variant_label}.")
+
+        if uploaded_file:
+            # Same file name is always replaced; another document can optionally be replaced too
+            same_name = uploaded_file.name in chunk_counts
+            if same_name:
+                st.warning(f"*{uploaded_file.name}* is already imported ({chunk_counts[uploaded_file.name]} chunks) and will be replaced.")
+
+            other_docs = [name for name in chunk_counts if name != uploaded_file.name]
+            replaces = None
+            if other_docs:
+                # Two official rulebooks side by side make no sense, so official uploads default to replacing
+                replace_index = 1 if is_official and not same_name else 0
+                replaces = st.selectbox(
+                    "Replaces",
+                    options=[None] + other_docs,
+                    index=replace_index,
+                    format_func=lambda x: "Nothing, keep the other documents" if x is None else x,
+                    key="ingest_replaces"
+                )
+
+            removed = [name for name in (uploaded_file.name if same_name else None, replaces) if name]
+            action = f"Import as {scope_label} · {variant_label}"
+            if removed:
+                action += f" · replaces {', '.join(removed)}"
+
+            confirmed = True
+            if is_official and removed:
+                removed_chunks = sum(chunk_counts[name] for name in removed)
+                st.error(f"⚠️ This replaces the official FIH {variant_label} rules ({removed_chunks} chunks). Every user's answers depend on these.")
+                confirmed = st.checkbox(f"Yes, replace the official {variant_label} rules", key="ingest_confirm")
+
+            if st.button(action, disabled=not confirmed, type="primary"):
+                with st.spinner(f"Indexing as {scope_label} · {variant_label}..."):
+                    try:
+                        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+                            tmp.write(uploaded_file.getvalue())
+                            tmp_path = tmp.name
+
+                        count = engine.ingest_pdf(
+                            tmp_path,
+                            selected_variant,
+                            country_code=ingest_country_code,
+                            original_filename=uploaded_file.name,
+                            replaces=replaces
+                        )
+
+                        st.success(f"Imported {count} chunks from {uploaded_file.name} as {scope_label} · {variant_label}.")
+                        time.sleep(1)
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Ingestion failed: {e}")
+                        logger.error("Ingestion failed", exc_info=True)
 
 st.divider()
 
@@ -147,7 +180,11 @@ try:
             if c5.button("🗑️", key=btn_key, help=f"Delete {row['source_file']}"):
                 try:
                     with st.spinner(f"Deleting {row['source_file']}..."):
-                        db.delete_source_file(row['source_file'])
+                        db.delete_source_file(
+                            row['source_file'],
+                            row['variant'],
+                            country_code=None if row['country'] == 'Official' else row['country']
+                        )
                     st.success(f"Deleted {row['source_file']}")
                     time.sleep(1) # Give user time to see success
                     st.rerun()

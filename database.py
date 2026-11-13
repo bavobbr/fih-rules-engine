@@ -132,30 +132,6 @@ class PostgresVectorDB:
                 
             conn.commit()
 
-    def delete_scoped_data(self, variant, country_code=None):
-        """Delete chunks for a specific scope (Country OR Official).
-        
-        If country_code is provided: Delete ONLY that country's data for this variant.
-        If country_code is None: Delete ONLY Official data (where country is NULL or type='official') for this variant.
-        """
-        table = config.TABLE_NAME
-        with self.pool.connect() as conn:
-            if country_code:
-                # Delete National Rulebook
-                logger.info(f"Deleting scoped data for variant='{variant}', country='{country_code}'")
-                stmt = text(f"DELETE FROM {table} WHERE variant = :variant AND metadata->>'country' = :country")
-                conn.execute(stmt, {"variant": variant, "country": country_code})
-            else:
-                # Delete Official Rulebook (Safe: Don't touch countries)
-                logger.info(f"Deleting scoped Official data for variant='{variant}'")
-                stmt = text(f"""
-                    DELETE FROM {table} 
-                    WHERE variant = :variant 
-                    AND (metadata->>'country' IS NULL OR metadata->>'type' = 'official')
-                """)
-                conn.execute(stmt, {"variant": variant})
-            conn.commit()
-
     def variant_exists(self, variant, country_code=None) -> bool:
         """Check if any data exists for the given variant/scope."""
         with self.pool.connect() as conn:
@@ -319,12 +295,40 @@ class PostgresVectorDB:
                 for row in result
             ]
 
-    def delete_source_file(self, filename):
-        """Delete all chunks belonging to a specific source file."""
+    @staticmethod
+    def _scope_filter(country_code=None):
+        """SQL condition + params selecting one country's rules, or the Official rules if country_code is None."""
+        if country_code:
+            return "metadata->>'country' = :country", {"country": country_code}
+        return "(metadata->>'country' IS NULL OR metadata->>'type' = 'official')", {}
+
+    def get_scope_documents(self, variant, country_code=None):
+        """List the documents ingested for one scope: [{'source_file': str, 'chunk_count': int}, ...]."""
+        scope_sql, scope_params = self._scope_filter(country_code)
         with self.pool.connect() as conn:
-            logger.info(f"Deleting source file: {filename}")
-            stmt = text(f"DELETE FROM {config.TABLE_NAME} WHERE metadata->>'source_file' = :filename")
-            conn.execute(stmt, {"filename": filename})
+            stmt = text(f"""
+                SELECT metadata->>'source_file' as source_file, COUNT(*) as chunk_count
+                FROM {config.TABLE_NAME}
+                WHERE variant = :variant AND {scope_sql}
+                GROUP BY 1
+                ORDER BY 1
+            """)
+            result = conn.execute(stmt, {"variant": variant, **scope_params}).fetchall()
+            return [
+                {"source_file": row[0] or "Unknown Source", "chunk_count": row[1]}
+                for row in result
+            ]
+
+    def delete_source_file(self, filename, variant, country_code=None):
+        """Delete the chunks of one source file within a scope (variant + country, or Official)."""
+        scope_sql, scope_params = self._scope_filter(country_code)
+        with self.pool.connect() as conn:
+            logger.info(f"Deleting source file: {filename} (variant='{variant}', country='{country_code}')")
+            stmt = text(f"""
+                DELETE FROM {config.TABLE_NAME}
+                WHERE metadata->>'source_file' = :filename AND variant = :variant AND {scope_sql}
+            """)
+            conn.execute(stmt, {"filename": filename, "variant": variant, **scope_params})
             conn.commit()
 
 import json
