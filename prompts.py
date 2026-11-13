@@ -31,31 +31,41 @@ INSTRUCTIONS:
    - **If a Game Situation**: Explicitly check Location (Circle/23m?), Actor (Attacker/Defender), Action (Intentional?), and Outcome.
    - **If a Static Rule/Definition**: Identify the specific object (e.g. Field, Stick) and attribute (Dimensions, Weight) requested.
 3. **Match Rules**: Find the specific rule in the CONTEXT that matches these elements.
-4. **Conclusion**: 
+4. **Conclusion**:
    - For situations: Determine the correct penalty based *strictly* on the cited rule.
    - For facts: State the exact measurement or definition from the text.
-STRUCTURE YOUR RESPONSE:
-**Reasoning:**
-*Explain the logic followed to arrive at the answer step by step. Example: "Since the defender committed an offence in the circle..."*
+5. **Stay grounded**: Every statement must be supported by the CONTEXT. Do not add rules, numbers or
+   penalties from your own knowledge.
 
-**Answer:**
-- Start with a human-friendly summary.
-- If applying a Local Rule, explicitly state: *"In {country_code}, the rule is..."*
-- Follow with a **markdown bulleted list** of technical details derived ONLY from the provided CONTEXT.
+OUTPUT FORMAT:
+Return ONLY a JSON object, no markdown fences, with these fields in this order:
+{{
+  "reasoning": "Step-by-step logic that leads to the answer, starting with what the user is asking. Example: 'The user asks about... Since the defender committed an offence in the circle...'",
+  "is_refusal": false,
+  "direct_answer": "A clear, human-friendly answer to the question in 1-3 sentences. If a Local Rule applies, say 'In {country_code}, the rule is...'.",
+  "key_rules": [
+    {{
+      "rule": "Rule number exactly as in the snippet's [Rule: ...] tag, e.g. 'Rule 9.12'. Empty string if unknown.",
+      "source_file": "File name from the snippet's [File: ...] tag.",
+      "page": "Page from the snippet's [File: ... p.N] tag. Empty string if unknown.",
+      "is_local": false,
+      "explanation": "The fact or requirement this rule contributes to the answer, in one sentence."
+    }}
+  ]
+}}
 
-CITATION RULES:
-- For each bullet point, cite the source.
-- Use **(Rule <rule>)** or **(Page <page>)**.
-- IMPORTANT: If the rule number or page is unknown/missing in the context, DO NOT invent one or write "(Rule unknown)". Just OMIT the specific citation.
-- If it is a local rule, append **(local rule)** to the end of the bullet point.
+FIELD RULES:
+- Never invent a rule number or page. Use an empty string when the snippet does not give one.
+- "is_local" is true only for snippets tagged [SOURCE: LOCAL ...].
+- If the CONTEXT does not answer the question, or the input is off-topic or a greeting, set "is_refusal" to true,
+  put a short polite reply in "direct_answer", and leave "key_rules" empty.
+- Write all text fields in the language of the QUESTION. Plain text only, no markdown.
 
 CONTEXT:
 {context_text}
 
 QUESTION:
 {standalone_query}
-
-ANSWER:
 """
 
 def get_query_planning_prompt(history_str: str, query: str, jurisdiction_label: str = "International") -> str:
@@ -100,49 +110,3 @@ def get_structure_analysis_prompt() -> str:
         Identify the definitions section as 'definitions'.
         Everything else (Preface, Contents, Advertising, End notes) should be 'intro' or 'outro'.
         """
-
-def get_reformatting_prompt(original_answer: str, context_text: str) -> str:
-    """
-    Generates the prompt for reformatting the initial RAG answer.
-    """
-    return f"""
-You are a technical editor for a Field Hockey Rules Assistant.
-Your job is to REFORMAT the provided 'Original Answer' into a specific structure without changing the correctness of the answer.
-
-INPUT DATA:
-- Original Answer: A detailed Chain-of-Thought response from an expert implementation.
-- Context Snippets: The source text used to generate the answer (allow for verifying citations).
-
-FORMAT REQUIREMENTS:
-1. **Structure**: 
-   - **Direct Answer**: The answer to the user's question. Clear, concise, and upfront.
-   - **Key Rules**: A bulleted list of the specific rules applied. 
-     - **CRITICAL**: Do NOT just list the rule number. You MUST keep the short explanation or fact from the Original Answer that goes with the citation.
-   - **Reasoning**: The detailed explanation (logic/steps) from the original answer.
-
-2. **Styling Rules**:
-   - **Rule References**: Must be **bold** (e.g. **Rule 9.11**, **Rule 5**).
-   - **Document Names**: Must be *italics* and *lowercase* (e.g. *fih-rules-2024.pdf*, *spelregels-outdoor.pdf*).
-   - **Unknowns**: Remove references like "Rule unknown", "p.?", or "Page ?". If you don't know the number, just describe the rule or omit the specific citation number.
-   - **Local Rules**: Explicitly label local rule variations if they appear in the answer.
-
-3. **Content Preservation**:
-   - Do NOT change the meaning.
-   - Do NOT remove important warnings or distinctions (e.g. Outdoor vs Indoor).
-   - Use the 'Reasoning' section to keep the deep explanation from the original answer.
-   - **CRITICAL**: Start the 'Reasoning' section by explicitly stating what the user is asking (e.g., "The user asks about..."). This interpretation context from the Original Answer must be preserved.
-
-4. **Refusal/Chit-chat Exception**:
-   - If the 'Original Answer' states that the question cannot be answered from the rules, is off-topic, or is just a greeting:
-     - Return ONLY the polite conversational response.
-     - Do NOT include 'Key Rules' or 'Reasoning' sections.
-     - Do NOT use any headers (like 'Direct Answer').
-
-Original Answer:
-{original_answer}
-
-Context Snippets:
-{context_text}
-
-Reformatted Output:
-"""

@@ -24,7 +24,7 @@ def generate_qa_pairs(limit: int = 10, variant: str = "indoor") -> List[Dict]:
     llm = VertexAI(
         model_name=config.LLM_MODEL,
         project=config.PROJECT_ID,
-        location=config.REGION,
+        location=config.LLM_LOCATION,
         temperature=0.4 # Slightly creative for question generation
     )
 

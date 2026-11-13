@@ -38,7 +38,6 @@ def test_query_uses_single_planning_call_and_or_keywords(mock_engine):  # noqa: 
     mock_engine.llm.invoke = MagicMock(side_effect=[
         '{"variant": "indoor", "standalone_query": "Standalone Q", "keywords": ["foot", "kick"]}',
         "Raw answer",
-        "Final Answer",
     ])
     mock_engine.embeddings.embed_query.return_value = [0.1, 0.2]
     mock_engine.db.search_hybrid.return_value = [
@@ -48,7 +47,7 @@ def test_query_uses_single_planning_call_and_or_keywords(mock_engine):  # noqa: 
 
     response = mock_engine.query("can I kick it?", history=[("user", "indoor question")])
 
-    assert mock_engine.llm.invoke.call_count == 3  # plan + answer + reformat
+    assert mock_engine.llm.invoke.call_count == 2  # plan + answer
     assert response["variant"] == "indoor"
     assert response["standalone_query"] == "Standalone Q"
     _, kwargs = mock_engine.db.search_hybrid.call_args

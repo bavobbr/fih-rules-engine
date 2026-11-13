@@ -228,11 +228,14 @@ class FIHRulesEngine:
         logger.info(f"Full Prompt: {full_prompt}")
         answer = self.llm.invoke(full_prompt)
         logger.info(f"Received AI response ({len(answer)} chars)")
-        
-        # --- SECOND PASS: REFORMATTING ---
-        logger.info("Starting Second Pass (Reformatting)...")
-        final_answer = self._reformat_response(answer, context_text)
-        logger.info(f"Reformatting complete ({len(final_answer)} chars)")
+
+        # Render structured answer; fall back to the raw text if the model did not return JSON
+        answer_data = self._extract_json(answer)
+        if answer_data.get("direct_answer"):
+            final_answer = self._render_answer(answer_data)
+        else:
+            logger.warning("Answer was not valid JSON, returning raw response.")
+            final_answer = answer
         
         return {
             "answer": final_answer,
@@ -298,9 +301,6 @@ class FIHRulesEngine:
     @staticmethod
     def _parse_query_plan(raw, original_query):
         """Parse the planner's JSON output, falling back to safe defaults if it is malformed."""
-        import json
-        import re
-
         def to_variant(text):
             # Prefer the most specific match ('hockey5s' text may also mention 'outdoor')
             text = str(text).lower()
@@ -309,12 +309,7 @@ class FIHRulesEngine:
                     return variant
             return "outdoor"
 
-        match = re.search(r"\{.*\}", raw, flags=re.DOTALL)
-        try:
-            data = json.loads(match.group(0)) if match else {}
-        except json.JSONDecodeError:
-            data = {}
-
+        data = FIHRulesEngine._extract_json(raw)
         if not data:
             logger.warning(f"Could not parse query plan, using original query. Raw output: {raw!r}")
             return {"variant": to_variant(raw), "standalone_query": original_query, "keywords": []}
@@ -328,10 +323,58 @@ class FIHRulesEngine:
             "keywords": [str(k).strip() for k in keywords if str(k).strip()],
         }
 
-    def _reformat_response(self, original_answer, context_text):
-        """
-        Uses a second LLM pass to reformat the answer into:
-        Answer > Citations > Reasoning.
-        """
-        reformat_prompt = prompts.get_reformatting_prompt(original_answer, context_text)
-        return self.llm.invoke(reformat_prompt)
+    @staticmethod
+    def _extract_json(raw):
+        """Return the first JSON object in an LLM response (tolerates fences and prose), or {}."""
+        import json
+        import re
+
+        match = re.search(r"\{.*\}", raw, flags=re.DOTALL)
+        try:
+            data = json.loads(match.group(0)) if match else {}
+        except json.JSONDecodeError:
+            return {}
+        return data if isinstance(data, dict) else {}
+
+    @staticmethod
+    def _render_answer(data):
+        """Render the structured answer as markdown: Direct Answer > Key Rules > Reasoning."""
+        direct_answer = str(data.get("direct_answer", "")).strip()
+        if data.get("is_refusal"):
+            return direct_answer
+
+        sections = [f"**Direct Answer**\n{direct_answer}"]
+
+        bullets = []
+        for item in data.get("key_rules") or []:
+            if not isinstance(item, dict):
+                continue
+            rule = str(item.get("rule", "")).strip()
+            # Loader placeholders are not real rule numbers
+            if rule.lower() in ("", "n/a", "general", "front matter", "unknown", "no number"):
+                rule = ""
+            elif rule[0].isdigit():
+                rule = f"Rule {rule}"
+
+            citation = str(item.get("source_file", "")).strip().lower()
+            page = str(item.get("page", "")).strip()
+            if page and page != "?":
+                citation = f"{citation}, p. {page}" if citation else f"p. {page}"
+
+            bullet = str(item.get("explanation", "")).strip()
+            if rule:
+                bullet = f"**{rule}**: {bullet}"
+            if citation:
+                bullet += f" *({citation})*"
+            if item.get("is_local"):
+                bullet += " (local rule)"
+            bullets.append(f"- {bullet}")
+
+        if bullets:
+            sections.append("**Key Rules**\n" + "\n".join(bullets))
+
+        reasoning = str(data.get("reasoning", "")).strip()
+        if reasoning:
+            sections.append(f"**Reasoning**\n{reasoning}")
+
+        return "\n\n".join(sections)

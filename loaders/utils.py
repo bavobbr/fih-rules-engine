@@ -29,7 +29,7 @@ def summarize_text(text: str) -> str:
     llm = VertexAI(
         model_name=config.LLM_MODEL,
         project=config.PROJECT_ID,
-        location=config.REGION,
+        location=config.LLM_LOCATION,
         temperature=0
     )
     
