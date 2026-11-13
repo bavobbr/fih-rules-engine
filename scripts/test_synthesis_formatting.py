@@ -9,7 +9,11 @@ from rag_engine import FIHRulesEngine
 from langchain_core.documents import Document
 
 def test_synthesis_formatting():
-    engine = FIHRulesEngine()
+    # Patch external services so the test runs offline under pytest as well as standalone
+    with patch('rag_engine.PostgresVectorDB'), \
+         patch('langchain_google_vertexai.VertexAI'), \
+         patch('langchain_google_vertexai.VertexAIEmbeddings'):
+        engine = FIHRulesEngine()
     
     # Mock LLM response with Summary and Details but NO labels
     mock_answer = """Yellow card suspensions are temporary penalties for misconduct, lasting at least 5 minutes.
@@ -30,6 +34,7 @@ def test_synthesis_formatting():
         {"content": "Rule 9.12 description", "metadata": {"source_file": "rules.pdf", "page": "12", "rule": "9.12", "chapter": "PLAYING THE GAME"}}
     ]
     engine.db.search_hybrid = MagicMock(return_value=mock_docs)
+    engine._rerank_documents = MagicMock(side_effect=lambda query, docs: docs)
     
     # Run query
     print("Running query simulation...")
@@ -52,7 +57,4 @@ def test_synthesis_formatting():
     print("\nVerification Successful: Answer follows final aesthetic rules!")
 
 if __name__ == "__main__":
-    with patch('rag_engine.PostgresVectorDB'), \
-         patch('langchain_google_vertexai.VertexAI'), \
-         patch('langchain_google_vertexai.VertexAIEmbeddings'):
-        test_synthesis_formatting()
+    test_synthesis_formatting()
