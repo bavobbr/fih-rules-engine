@@ -172,9 +172,12 @@ class PostgresVectorDB:
                 result = conn.execute(stmt, {"variant": variant}).scalar()
             return result is not None
 
-    def search_hybrid(self, query_text, query_vector, variant, country_code=None, k=15):
+    def search_hybrid(self, query_text, query_vector, variant, country_code=None, k=15, keyword_text=None):
         """Perform Hybrid Search using Reciprocal Rank Fusion (RRF).
-        
+
+        keyword_text: websearch_to_tsquery input for the FTS leg (e.g. "foot or kick").
+                      Defaults to query_text.
+
         Scope:
         - If country_code is None: Global Search (Official Rules Only).
         - If country_code is SET: Local Search (Specific Country Rules Only).
@@ -225,7 +228,7 @@ class PostgresVectorDB:
             params = {
                 "variant": variant,
                 "vector": str(query_vector),
-                "query": query_text,
+                "query": keyword_text or query_text,
                 "k": k
             }
             if country_code:

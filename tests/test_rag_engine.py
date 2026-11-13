@@ -54,8 +54,7 @@ def test_ingest_pdf_success(mock_engine):
 def test_query_flow(mock_engine):
     """Test the query routing and context building."""
     # Setup Mocks
-    mock_engine._contextualize_query = MagicMock(return_value="Standalone Q")
-    mock_engine._route_query = MagicMock(return_value="indoor")
+    mock_engine._plan_query = MagicMock(return_value={"variant": "indoor", "standalone_query": "Standalone Q", "keywords": []})
     mock_engine.embeddings.embed_query.return_value = [0.1, 0.2]
     
     mock_engine.db.search_hybrid.return_value = [

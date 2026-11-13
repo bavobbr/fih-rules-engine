@@ -138,32 +138,30 @@ class FIHRulesEngine:
         """
         logger.info(f"Query: {user_input} [Country: {country_code}]")
         
-        # Reformulate & route
-        standalone_query = self._contextualize_query(history, user_input, country_code=country_code)
-        logger.info(f"Standalone Query: {standalone_query}")
-        
-        detected_variant = self._route_query(standalone_query)
-        if detected_variant not in config.VARIANTS: 
-            detected_variant = "outdoor"
-        
-        import re
-        # Remove [VARIANT: ...] prefix
-        clean_query = re.sub(r"^\[VARIANT:.*?\]\s*", "", standalone_query, flags=re.IGNORECASE)
-        
+        # Reformulate, route & extract keywords (single LLM call)
+        plan = self._plan_query(history, user_input, country_code=country_code)
+        standalone_query = plan["standalone_query"]
+        detected_variant = plan["variant"]
+        # Keywords are OR-ed: websearch_to_tsquery ANDs plain words, which rarely matches a whole question
+        keyword_text = " or ".join(plan["keywords"]) or standalone_query
+        logger.info(f"Query plan: variant={detected_variant}, standalone='{standalone_query}', keywords='{keyword_text}'")
+
         # Embed query
-        query_vector = self.embeddings.embed_query(clean_query)
-        
+        query_vector = self.embeddings.embed_query(standalone_query)
+
         # --- DUAL-PATH RETRIEVAL ---
         # Path 1: Global Rules (Official) - Always fetch
         results_global = self.db.search_hybrid(
-            clean_query, query_vector, detected_variant, country_code=None, k=config.RETRIEVAL_K
+            standalone_query, query_vector, detected_variant, country_code=None,
+            k=config.RETRIEVAL_K, keyword_text=keyword_text
         )
-        
+
         results_local = []
         if country_code:
             # Path 2: Local Rules - Fetch if jurisdiction applies
             results_local = self.db.search_hybrid(
-                clean_query, query_vector, detected_variant, country_code=country_code, k=config.RETRIEVAL_K
+                standalone_query, query_vector, detected_variant, country_code=country_code,
+                k=config.RETRIEVAL_K, keyword_text=keyword_text
             )
             
         # Merge Results
@@ -175,7 +173,7 @@ class FIHRulesEngine:
         
         # Rerank
         if docs:
-            docs = self._rerank_documents(clean_query, docs)
+            docs = self._rerank_documents(standalone_query, docs)
             # Limit to RANKING_TOP_N
             docs = docs[:config.RANKING_TOP_N]
         
@@ -284,10 +282,8 @@ class FIHRulesEngine:
             logger.error(f"Error during reranking: {e}. Falling back to original retrieval.")
             return docs
 
-    def _contextualize_query(self, history, query, country_code=None):
-        """Rewrite the latest user message as a standalone query."""
-        if not history: return query
-        
+    def _plan_query(self, history, query, country_code=None):
+        """Return {variant, standalone_query, keywords} for the latest user message."""
         # Resolve Jurisdiction Label
         jurisdiction_label = "International"
         if country_code:
@@ -296,13 +292,41 @@ class FIHRulesEngine:
             jurisdiction_label = code_to_name.get(country_code, f"{country_code} National")
 
         history_str = "\n".join([f"{role}: {txt}" for role, txt in history[-4:]])
-        prompt = prompts.get_contextualization_prompt(history_str, query, jurisdiction_label=jurisdiction_label)
-        return self.llm.invoke(prompt).strip()
+        prompt = prompts.get_query_planning_prompt(history_str, query, jurisdiction_label=jurisdiction_label)
+        return self._parse_query_plan(self.llm.invoke(prompt), query)
 
-    def _route_query(self, query):
-        """Return 'outdoor' | 'indoor' | 'hockey5s' based on content."""
-        prompt = prompts.get_routing_prompt(query)
-        return self.llm.invoke(prompt).strip().lower().replace("'", "").replace('"', "")
+    @staticmethod
+    def _parse_query_plan(raw, original_query):
+        """Parse the planner's JSON output, falling back to safe defaults if it is malformed."""
+        import json
+        import re
+
+        def to_variant(text):
+            # Prefer the most specific match ('hockey5s' text may also mention 'outdoor')
+            text = str(text).lower()
+            for variant in ("hockey5s", "indoor", "outdoor"):
+                if variant in text:
+                    return variant
+            return "outdoor"
+
+        match = re.search(r"\{.*\}", raw, flags=re.DOTALL)
+        try:
+            data = json.loads(match.group(0)) if match else {}
+        except json.JSONDecodeError:
+            data = {}
+
+        if not data:
+            logger.warning(f"Could not parse query plan, using original query. Raw output: {raw!r}")
+            return {"variant": to_variant(raw), "standalone_query": original_query, "keywords": []}
+
+        keywords = data.get("keywords") or []
+        if not isinstance(keywords, list):
+            keywords = [keywords]
+        return {
+            "variant": to_variant(data.get("variant", "outdoor")),
+            "standalone_query": str(data.get("standalone_query") or original_query).strip(),
+            "keywords": [str(k).strip() for k in keywords if str(k).strip()],
+        }
 
     def _reformat_response(self, original_answer, context_text):
         """

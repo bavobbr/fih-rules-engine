@@ -23,8 +23,7 @@ def test_synthesis_formatting():
 - For specific field play violations, a suspension may be issued **(Rule 9.12 | PLAYING THE GAME)**."""
     
     engine.llm.invoke = MagicMock(return_value=mock_answer)
-    engine._contextualize_query = MagicMock(return_value="Yellow card suspension duration?")
-    engine._route_query = MagicMock(return_value="outdoor")
+    engine._plan_query = MagicMock(return_value={"variant": "outdoor", "standalone_query": "Yellow card suspension duration?", "keywords": ["yellow card", "suspension"]})
     engine.embeddings.embed_query = MagicMock(return_value=[0.1]*768)
     
     # Mock DB results

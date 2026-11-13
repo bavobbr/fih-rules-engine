@@ -58,39 +58,36 @@ QUESTION:
 ANSWER:
 """
 
-def get_contextualization_prompt(history_str: str, query: str, jurisdiction_label: str = "International") -> str:
+def get_query_planning_prompt(history_str: str, query: str, jurisdiction_label: str = "International") -> str:
     """
-    Generates the prompt for contextualizing a follow-up question.
+    Generates the prompt that turns a user message into a retrieval plan:
+    hockey variant, standalone question and search keywords (single LLM call).
     """
-    return f"""Given the following conversation and a follow up user input about Field Hockey.
+    return f"""You prepare search queries for a Field Hockey rules assistant. Do NOT answer the question.
 
-YOUR GOAL:
-Rephrase the 'Follow Up Input' to be a standalone question, using the 'Chat History' ONLY to resolve pronouns (it, they, that) or ambiguous references to the previous topic.
-Keep the language as used, if not sure use english.
+The user is asking about rules in this jurisdiction: **{jurisdiction_label}**.
+If the user says "here", "in my country", "locally", or "this jurisdiction", they mean **{jurisdiction_label}**.
 
-CONTEXT INFORMATION:
-The user is currently asking about rules in this jurisdiction: **{jurisdiction_label}**.
-If the user says "here", "in my country", "locally", or "this jurisdiction", they are referring to **{jurisdiction_label}**.
+TASKS:
+1. "variant": the hockey variant the question is about: "outdoor", "indoor" or "hockey5s".
+   Use the Chat History if the input itself does not say. Default to "outdoor" if unclear.
+2. "standalone_query": rewrite the input as a self-contained question, using the Chat History ONLY to
+   resolve references (it, they, that) to the previous topic. Keep the user's language.
+   If the input is unrelated to the history or is nonsense, return it unchanged.
+3. "keywords": 3 to 8 short search terms as they would appear in the official FIH rulebook.
+   Translate everyday wording into rulebook terminology (e.g. "kicks the ball" -> "foot",
+   "back of the stick" -> "rounded side", "card" -> "suspension") and include key nouns from the question.
+   Leave out generic words that appear in almost every rule (ball, player, hockey, rule, team) and the variant name.
+   If the question is not in English, also include the terms in the user's language.
 
-RULES:
-1. If the 'Follow Up Input' is a valid follow-up question, rewrite it to be fully self-contained including the hockey variant.
-2. If the 'Follow Up Input' is completely unrelated to the previous context or is gibberish/nonsense, DO NOT change it. Return it exactly as is (but still add the variant tag).
-3. Do NOT attempt to answer the question.
-4. First analyze the hockey variant (outdoor, indoor, hockey5s) from the context. Default to 'outdoor' if unclear.
-5. Prepend the variant in a strict format: [VARIANT: <variant>]
+Return ONLY a JSON object, no markdown:
+{{"variant": "...", "standalone_query": "...", "keywords": ["...", "..."]}}
 
 Chat History:
-{history_str}
+{history_str or "(none)"}
 
-Follow Up Input: {query}
-
-Standalone Question:"""
-
-def get_routing_prompt(query: str) -> str:
-    """
-    Generates the prompt for routing a query to the correct variant (outdoor, indoor, hockey5s).
-    """
-    return f"Analyze Field Hockey question and categorize it as outdoor, indoor or hockey5s variant. Return 'outdoor', 'indoor', or 'hockey5s'. Default to 'outdoor'.\nQUESTION: {query}"
+User Input: {query}
+"""
 
 def get_structure_analysis_prompt() -> str:
     """

@@ -1,0 +1,975 @@
+{
+  "custom_metrics": {
+    "accuracy": 93.33333333333333,
+    "hit_rate": 61.111111111111114,
+    "citation_rate": 75.86206896551724
+  },
+  "ragas_metrics": {
+    "faithfulness": 0.6997924583586349,
+    "answer_relevancy": 0.8596134779158825,
+    "context_precision": 0.8893253967496713,
+    "context_recall": 0.9361111111111111
+  },
+  "details": [
+    {
+      "question": "In outdoor field hockey, according to the penalty corner rules, what distance from the circle will cause the rules to no longer apply?",
+      "ground_truth": "5 metres",
+      "bot_answer": "**Direct Answer**: \nA penalty corner is completed\u2014meaning the penalty corner rules no longer apply\u2014when the ball travels more than 5 metres from the circle.\n\n**Key Rules**:\n- **Rule 13.5**: A penalty corner is completed when specific conditions are met, including when the ball travels more than 5 metres from the circle (as outlined in *fih-rules-of-hockey-2026-final.pdf*).\n\n**Reasoning**:\nThe user asks about when a penalty corner is considered completed to understand the boundary at which penalty corner rules no longer apply. According to **Rule 13.5** in *fih-rules-of-hockey-2026-final.pdf*, a penalty corner reaches completion when certain specific conditions occur, such as a goal being scored, a free hit being awarded to the defending team, or when the ball travels more than 5 metres from the circle.",
+      "score": 1,
+      "retrieval_hit": false,
+      "citation_hit": false,
+      "context_guidance": "Derived from 13.3",
+      "reasoning": "The student correctly identified the distance of 5 metres from the circle where the penalty corner rules no longer apply.",
+      "ragas": {
+        "faithfulness": 0.8,
+        "answer_relevancy": 0.7816681555136058,
+        "context_precision": 0.7499999999625,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In outdoor field hockey, what is the rule regarding the prolongation of a match at the end of each quarter?",
+      "ground_truth": "The match is prolonged at the end of each quarter to allow completion of a penalty corner or any subsequent penalty corner or penalty stroke.",
+      "bot_answer": "**Direct Answer:**\nA field hockey match is prolonged at the end of each quarter to allow for the completion of an ongoing penalty corner or any subsequent penalty corner or penalty stroke.\n\n**Key Rules:**\n- **Rule 13.4**: The match is prolonged at the end of each quarter to allow completion of a penalty corner or any subsequent penalty corner or penalty stroke.\n- **Rule 11.5**: Umpires are responsible for ensuring that the full time is played and for indicating the end of time for each quarter and for the completion of a penalty corner if a quarter is prolonged.\n\n**Reasoning:**\nThe user asks about the prolongation of a match at the end of each quarter. To answer this, we locate the rules pertaining to the end of a quarter and penalty corners in *fih-rules-of-hockey-2026-final.pdf*. According to **Rule 13.4** and **Rule 11.5**, the match is prolonged at the end of each quarter to allow for the completion of a penalty corner or any subsequent penalty corner or penalty stroke, with umpires responsible for indicating the end of time accordingly.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 13.4",
+      "reasoning": "The student answer correctly identifies that the match is prolonged at the end of each quarter to allow the completion of a penalty corner, any subsequent penalty corner, or a penalty stroke, matching the ground truth.",
+      "ragas": {
+        "faithfulness": 0.7777777777777778,
+        "answer_relevancy": 0.9130643889607354,
+        "context_precision": 0.99999999995,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "Regarding match preparation for an outdoor field hockey game, what specific items constitute the required umpiring equipment, as outlined in the provided text?",
+      "ground_truth": "Umpiring equipment includes a copy of the current Rules book, a loud and distinctive whistle, a stopwatch, coloured cards to indicate personal penalties and materials to record match details.",
+      "bot_answer": "**Direct Answer:**\nUmpiring equipment required for match preparation includes access to the current rules book, a loud and distinctive whistle, a stopwatch, coloured cards for personal penalties, and materials to record match details.\n\n**Key Rules:**\n- **Rule 3.2**: Umpiring equipment includes access to the current Rules book, a loud and distinctive whistle, a stopwatch, coloured cards to indicate personal penalties, and materials to record match details.\n\n**Reasoning:**\nThe user asks about match preparation and umpiring equipment. To answer this question, the specific rule governing umpire match preparation was located in *fih-rules-of-hockey-2026-final.pdf* under **Rule 3.2**. Specifically, section (f) of this rule explicitly lists the necessary equipment an umpire must prepare and have ready for each match.",
+      "score": 1,
+      "retrieval_hit": false,
+      "citation_hit": true,
+      "context_guidance": "Derived from 3.2",
+      "reasoning": "The student answer correctly identifies all the required umpiring equipment as outlined in the ground truth (current rules book, loud and distinctive whistle, stopwatch, coloured cards, and materials to record match details).",
+      "ragas": {
+        "faithfulness": 0.9230769230769231,
+        "answer_relevancy": 0.7860382638194379,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In outdoor field hockey, during a penalty corner, what happens if the player taking the push or hit from the back-line feints at playing the ball?",
+      "ground_truth": "The offending player is required to go beyond the centre-line but is replaced by another attacker, and the penalty corner is taken again.",
+      "bot_answer": "**Direct Answer**\nIf the player taking the push or hit from the back-line feints at playing the ball during a penalty corner, they must go beyond the centre-line and be replaced by another attacker, and the penalty corner is taken again.\n\n**Key Rules**\n* The offending player taking the push or hit from the back-line who feints at playing the ball is required to go beyond the centre-line but is replaced by another attacker **(Rule 13.6)**.\n* The penalty corner is taken again following this offence **(Rule 13.6)**.\n* If this feinting leads to what otherwise would be a breach of this rule by a defender, only the attacker is required to go beyond the centre-line **(Rule 13.6)**.\n\n**Reasoning**\nThe user asks about the consequences during a penalty corner when the attacker taking the push or hit from the back-line feints at playing the ball. According to *fih-rules-of-hockey-2026-final.pdf*, specifically **Rule 13.6(b)** covering offences during the taking of a penalty corner, if the player executing the push or hit from the back-line feints at playing the ball, that specific player must move beyond the centre-line. However, unlike certain defensive penalties, this player is permitted to be replaced by another attacker, and the penalty corner must be re-taken. Furthermore, the rules account for potential reactions by the defense, establishing that if the attacker's feint directly causes a defender to commit what would otherwise be a line-breach violation, only the offending attacker is penalized by being sent beyond the centre-line.",
+      "score": 1,
+      "retrieval_hit": false,
+      "citation_hit": true,
+      "context_guidance": "Derived from 13.6",
+      "reasoning": "The student answer accurately identifies that the offending player must go beyond the centre-line, be replaced by another attacker, and that the penalty corner is taken again, matching the ground truth.",
+      "ragas": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.8950527300583283,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In outdoor field hockey, a free hit is awarded to the attack within the 23-meter area. What are the restrictions on playing the ball into the circle, and what are the exceptions?",
+      "ground_truth": "From a free hit awarded to the attack within the 23-meter area, the ball must not be played into the circle until it has travelled at least 5 metres, not necessarily in a single direction, or has been touched by a player of the defending team. If the player taking the free hit continues to play the ball (ie no defending player has yet touched it): that player may play the ball any number of times, but the ball must travel at least 5 metres, before that player plays the ball into the circle by hitting or pushing the ball again.",
+      "bot_answer": "**Direct Answer**: \nWhen a free hit is awarded to the attacking team within the 23-metre area, the ball must travel at least 5 metres (not necessarily in a single direction) or be touched by a defending player before it can be played into the circle.\n\n**Key Rules**:\n- **Rule 13.2**: The ball must not be played into the circle from an attacking free hit within the 23-metre area until it has travelled at least 5 metres or has been touched by a defending player.\n- **Rule 13.2**: If the player taking the free hit continues to play the ball themselves without a defender touching it, they may play it multiple times, but the ball must still travel at least 5 metres before that player plays it into the circle.\n- **Rule 13.2**: Once a defending player has touched the ball, it may be played into the circle by any other player, including the player who took the free hit.\n- **Rule 13.2**: For an attacking free hit awarded within 5 metres of the circle, defenders inside the circle within 5 metres may shadow a self-pass, provided they do not play, attempt to play, or influence the ball until it has travelled at least 5 metres or been touched by a defender.\n- **Rule 13.2**: It is permitted to play the ball high above the attacking circle so that it lands outside the circle, subject to rules on dangerous play and provided the ball is not legitimately playable inside or above the circle during its flight (*fih-rules-of-hockey-2026-final.pdf*).\n\n**Reasoning**:\nThe user asks about the restrictions and exceptions for playing the ball into the circle from a free hit awarded to the attacking team within the 23-meter area. To determine the correct procedure, **Rule 13.2** of *fih-rules-of-hockey-2026-final.pdf* is reviewed. The primary restriction is that the ball cannot enter the circle directly from the free hit unless it travels a minimum of 5 metres or makes contact with a defender. If the taker executes a self-pass and maintains possession without a defensive touch, they may play the ball consecutively, but it must still cover the 5-metre threshold prior to entering the circle. Conversely, any defensive touch immediately unlocks the circle for any attacker to play the ball in. Additionally, specific allowances are made for defenders shadowing within 5 metres of a quick self-pass near the circle, and for lofting the ball over the circle airspace as long as it lands safely outside and is not playable mid-flight.",
+      "score": 1,
+      "retrieval_hit": false,
+      "citation_hit": true,
+      "context_guidance": "Derived from 13.2",
+      "reasoning": "The student correctly identified all the core restrictions and exceptions outlined in the ground truth, specifically that the ball must travel at least 5 metres or be touched by a defender before being played into the circle, and that the taker may play the ball multiple times (self-pass) as long as the 5-metre requirement is met before entry into the circle.",
+      "ragas": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.856200349687914,
+        "context_precision": 0.9999999999,
+        "context_recall": 0.5
+      }
+    },
+    {
+      "question": "In outdoor field hockey, what is the maximum permissible weight, in grams, of a stick, and what is the maximum length, in centimeters, of the stick as measured from the top of the handle to the bottom of the head?",
+      "ground_truth": "The maximum weight is 737 grams, and the maximum length is 105 cm.",
+      "bot_answer": "**Direct Answer**\nIn international outdoor field hockey, the maximum weight of a stick cannot exceed 737 grams, and its maximum length is 105 cm.\n\n**Key Rules**\n- The total weight of the stick must not exceed 737 grams (*fih-rules-of-hockey-2026-final.pdf*, p. 68).\n- The length of the stick as measured from the top of the handle to the bottom of the head shall not be more than 105 cm (*fih-rules-of-hockey-2026-final.pdf*, p. 68).\n\n**Reasoning**\nThe user asks for static facts and definitions regarding the hockey stick, specifically the maximum weight in grams and maximum length in centimeters. To determine these limits, the context from *fih-rules-of-hockey-2026-final.pdf* was searched for stick specifications. According to the regulations on stick properties, the total weight is strictly capped at 737 grams, and the length measured from the top of the handle to the bottom of the head cannot exceed 105 cm.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": false,
+      "context_guidance": "Derived from 2.18",
+      "reasoning": "The student correctly identified both the maximum weight (737 grams) and the maximum length (105 cm) of the field hockey stick, matching the ground truth.",
+      "ragas": {
+        "faithfulness": 0.5,
+        "answer_relevancy": 0.9309464155273142,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In outdoor field hockey, what is the maximum interior diameter, in millimeters, that a ring must have for the stick to pass through, inclusive of any additional coverings?",
+      "ground_truth": "51",
+      "bot_answer": "**Direct Answer**\nInclusive of any additional coverings used, the stick must be able to pass through a ring with an interior diameter of 51 mm.\n\n**Key Rules**\n- **Rule 4.6**: Inclusive of any additional coverings used, the stick must be able to pass through a ring with an interior diameter of 51 mm.\n- **Rule 4.6** (and *fih-rules-of-hockey-2026-final.pdf* specifications): Measurements are made and other specifications assessed with any coverings or additional fixings attached to the stick (that is, with the stick in the form in which it is used on the field).\n\n**Reasoning**\nThe user asks about the maximum interior diameter of a ring through which the stick must be able to pass. To find this, we need to check the stick specifications in the rules regarding its dimensions. Both **Rule 4.6** and the equipment specifications state that inclusive of any additional coverings used, the stick must be able to pass through a ring with an interior diameter of 51 mm. Furthermore, this assessment is made with any coverings or additional fixings attached to the stick in the exact form it is used on the field.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": false,
+      "context_guidance": "Derived from 2.17",
+      "reasoning": "The student correctly identified the maximum interior diameter as 51 mm, matching the ground truth answer.",
+      "ragas": {
+        "faithfulness": 0.75,
+        "answer_relevancy": 0.8653067831473374,
+        "context_precision": 0.99999999995,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In outdoor field hockey, what is the distance from the outside edges of the 3.66-meter lines (that are parallel to the back-lines) to the outside edges of the back-lines?",
+      "ground_truth": "14.63 metres",
+      "bot_answer": "**Direct Answer**\nThe distance from the outside edges of the 3.66-metre circle lines to the outside edges of the back-lines is 14.63 metres.\n\n**Key Rules**\n- **Field and Equipment Specifications, Section 1.4**: States that the distance from the outside edges of the 3.66-metre lines to the outside edges of the back-lines is 14.63 metres (as found in *fih-rules-of-hockey-2026-final.pdf*).\n\n**Reasoning**\nThe user asks about the specific measurement and distance from the 3.66-meter lines (the circle lines) to the back-lines on a field hockey pitch. To determine this, we look at the field and equipment specifications in the official rules document, *fih-rules-of-hockey-2026-final.pdf*, which explicitly defines the layout of the circles and their positioning relative to the back-lines.",
+      "score": 1,
+      "retrieval_hit": false,
+      "citation_hit": true,
+      "context_guidance": "Derived from 1.4",
+      "reasoning": "The student correctly identified the distance as 14.63 metres, matching the ground truth answer.",
+      "ragas": {
+        "faithfulness": 0.6666666666666666,
+        "answer_relevancy": 0.9312540358873989,
+        "context_precision": 0.8333333332916666,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In outdoor field hockey, a field player who leaves the field for refreshment is permitted to re-enter the field at which specific location?",
+      "ground_truth": "Between the 23 metres areas on the side of the field used for substitutions.",
+      "bot_answer": "**Direct Answer**: Field players who leave the field for refreshment are only permitted to re-enter between the 23-metres areas on the side of the field used for substitutions.\n\n**Key Rules**:\n- **Rule 2.4**: Field players who leave the field for injury treatment, refreshment, to change equipment, or for reasons other than substitution are only permitted to re-enter between the 23-metres areas on the side of the field used for substitutions.\n\n**Reasoning**: The user asks about the rules governing field players leaving the field for refreshment and their permitted re-entry points. Reviewing *fih-rules-of-hockey-2026-final.pdf*, **Rule 2.4** explicitly addresses field players leaving the field for reasons such as injury treatment, refreshment, or changing equipment, noting that such players must re-enter exclusively between the 23-metres areas on the substitution side of the field.",
+      "score": 1,
+      "retrieval_hit": false,
+      "citation_hit": true,
+      "context_guidance": "Derived from 2.4",
+      "reasoning": "The student answer correctly identifies that the player must re-enter between the 23-metres areas on the side of the field used for substitutions, matching the ground truth answer.",
+      "ragas": {
+        "faithfulness": 0.6,
+        "answer_relevancy": 0.8349374064663846,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In an outdoor field hockey match, if the team winning the coin toss chooses to start the match with a centre pass, what choice does the opposing team have regarding the first two quarters of the match?",
+      "ground_truth": "The opposing team has the choice of which goal to attack in the first two quarters of the match.",
+      "bot_answer": "**Direct Answer**\nIf the team winning the coin toss chooses to start the match with a centre pass, the opposing team is given the choice of which goal to attack in the first two quarters of the match.\n\n**Key Rules**\n- **Rule 6.1**: If the team winning the toss chooses to start the match with a centre pass, the opposing team has the choice of which goal to attack in the first two quarters of the match.\n\n**Reasoning**\nThe user asks about the choice given to the opposing team when the team winning the coin toss chooses to start the match with a centre pass. According to the match start procedures outlined in *fih-rules-of-hockey-2026-final.pdf*, a coin is tossed to determine initial match privileges. The team that wins the toss can either choose which goal to attack in the first two quarters or choose to start the match with a centre pass. If they elect to take the centre pass to start, the rules dictate that the opposing team receives the remaining option, which is choosing which goal to attack for the first two quarters.",
+      "score": 1,
+      "retrieval_hit": false,
+      "citation_hit": true,
+      "context_guidance": "Derived from 6.1",
+      "reasoning": "The student answer correctly identifies that the opposing team has the choice of which goal to attack in the first two quarters of the match, matching the ground truth.",
+      "ragas": {
+        "faithfulness": 0.875,
+        "answer_relevancy": 0.84460872910623,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In outdoor field hockey, what signal must be shown if there is doubt about the reason for a decision regarding conduct of play offences, specifically dangerous play?",
+      "ground_truth": "Place one forearm diagonally across.",
+      "bot_answer": "**Direct Answer:**\nWhen signalling for a dangerous play conduct of play offence, the umpire must place one forearm diagonally across the chest.\n\n**Key Rules:**\n- **Rule 4.5**: Signals for conduct of play offences must be shown if there is doubt about the reason for the decision, specifically stating that for a dangerous play, the umpire must place one forearm diagonally across the chest.\n\n**Reasoning:**\nThe user asks about the specific signal required for a \"dangerous play\" conduct of play offence when there is doubt about the reason for a decision. By reviewing the umpiring rules in *fih-rules-of-hockey-2026-final.pdf*, **Rule 4.5** outlines the required physical signals for various conduct of play offences. Specifically, item 'a' dictates that for dangerous play, the umpire must place one forearm diagonally across the chest to clearly indicate the nature of the offence to the players and the other official.",
+      "score": 1,
+      "retrieval_hit": false,
+      "citation_hit": true,
+      "context_guidance": "Derived from 4.5",
+      "reasoning": "The student answer correctly identifies the required signal (place one forearm diagonally across the chest) which matches the ground truth.",
+      "ragas": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7746318311100997,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In indoor field hockey, where are the goals positioned relative to the pitch, and what items are explicitly prohibited from being placed inside them?",
+      "ground_truth": "Goals are positioned outside the pitch at the centre of and touching each back-line. No equipment or items, such as helmets, face masks, hand protectors, towels, water bottles etc. may be placed inside the goals.",
+      "bot_answer": "### Direct Answer\nGoals are positioned outside the pitch at the centre of and touching each back-line, and no equipment or items may be placed inside them according to ***fih-rules-of-indoor-hockey-2023.pdf***.\n\n### Key Rules\n- **Rule 1.7**: Goals are positioned outside the pitch at the centre of and touching each back-line, and no equipment or items (such as helmets, face masks, hand protectors, towels, water bottles, etc.) may be placed inside the goals.\n\n### Reasoning\nThe user asks about the correct positioning of goals and the regulations regarding items placed inside them. According to ***fih-rules-of-indoor-hockey-2023.pdf*** (**Rule 1.7**), goals must be placed outside the playing surface at the exact center of and touching each back-line. Additionally, this rule strictly prohibits storing or placing any equipment or personal items\u2014such as helmets, face masks, hand protectors, towels, or water bottles\u2014inside the goals.",
+      "score": 1,
+      "retrieval_hit": false,
+      "citation_hit": true,
+      "context_guidance": "Derived from 1.7",
+      "reasoning": "The student correctly identified both the positioning of the goals (outside the pitch at the centre of and touching each back-line) and the items prohibited from being placed inside them (equipment/items such as helmets, face masks, hand protectors, towels, water bottles, etc.).",
+      "ragas": {
+        "faithfulness": 0.5714285714285714,
+        "answer_relevancy": 0.8907073784733913,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In indoor field hockey, what are the umpires responsible for keeping a record of?",
+      "ground_truth": "Goals scored and suspension cards used.",
+      "bot_answer": "**Direct Answer**\nUmpires are responsible for keeping a record of match events, specifically tracking goals scored and suspension cards used, and both umpires must confirm these records at the end of the match.\n\n**Key Rules**\n- **Rule 11.4**: Umpires are responsible for keeping a record of goals scored and of suspension cards used (as outlined in *fih-rules-of-indoor-hockey-2023.pdf*).\n- **Rule 3.2**: A record of goals scored and cards issued must be kept by both umpires and confirmed at the end of the match (as outlined in *fih-rules-of-indoor-hockey-2023.pdf*).\n\n**Reasoning**\nThe user asks about the responsibilities of umpires regarding keeping records during a match. To answer this question, we examine the provided rules concerning umpire duties. Scanning the text for recording obligations, we find that umpires are explicitly tasked with keeping records of specific match events, such as goals scored and suspension cards used. Furthermore, the rules require that both umpires must maintain these records and confirm them at the conclusion of the match.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 11.4",
+      "reasoning": "The student correctly identified that umpires are responsible for keeping a record of goals scored and suspension cards used, matching the ground truth.",
+      "ragas": {
+        "faithfulness": 0.7777777777777778,
+        "answer_relevancy": 0.7335669909971321,
+        "context_precision": 0.99999999995,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In indoor hockey, under what circumstances are players permitted to change their stick between the award and completion of a penalty corner or penalty stroke?",
+      "ground_truth": "Players are permitted to change their stick if it no longer meets the stick specification.",
+      "bot_answer": "**Direct Answer**\nPlayers are prohibited from changing their stick between the award and completion of a penalty corner or penalty stroke, unless the stick no longer meets the stick specifications (*fih-rules-of-indoor-hockey-2023.pdf*, **Rule 9.16**).\n\n**Key Rules**\n- **Rule 9.16**: Players must not change their stick between the award and completion of a penalty corner or penalty stroke unless it no longer meets the stick specification (*fih-rules-of-indoor-hockey-2023.pdf*).\n\n**Reasoning**\nThe user asks about the rules regarding stick changes during a penalty corner or penalty stroke. To answer this question, we check the specific restrictions placed on players regarding equipment during set pieces. According to **Rule 9.16** of *fih-rules-of-indoor-hockey-2023.pdf*, players are strictly prohibited from changing their stick between the initial award and the final completion of either a penalty corner or a penalty stroke. The only allowed exception is if the stick breaks or otherwise no longer meets the required stick specifications.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 9.16",
+      "reasoning": "The student correctly identified that players are permitted to change their stick if it no longer meets the stick specification, matching the ground truth answer.",
+      "ragas": {
+        "faithfulness": 0.4,
+        "answer_relevancy": 0.8881861108525418,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In indoor hockey, where must a player who has been temporarily suspended remain until the umpire allows them to resume play?",
+      "ground_truth": "In a designated place.",
+      "bot_answer": "**Direct Answer**\nA temporarily suspended player must remain in a designated place until the umpire who suspended them gives them permission to resume play.\n\n**Key Rules**\n- **Rule 14.2** (*fih-rules-of-indoor-hockey-2023.pdf*): Temporarily suspended players must remain in a designated place until permitted by the umpire who suspended them to resume play.\n\n**Reasoning**\nThe user asks about the location where temporarily suspended players must stay during their suspension. To answer the question, I need to identify the rule governing the location where temporarily suspended players must stay during their suspension. Looking at the provided context, **Rule 14.2** explicitly states that temporarily suspended players must remain in a designated place until the suspending umpire permits them to resume play.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 14.2",
+      "reasoning": "The student answer correctly identifies that the player must remain in a designated place until allowed to resume play by the umpire, which matches the ground truth.",
+      "ragas": {
+        "faithfulness": 0.6,
+        "answer_relevancy": 0.7618269778570462,
+        "context_precision": 0.99999999995,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In indoor hockey, what action is a player prohibited from taking in relation to the goal their opponents are defending?",
+      "ground_truth": "Players must not intentionally enter the goal their opponents are defending or run behind either goal.",
+      "bot_answer": "**Direct Answer:**\nPlayers are strictly prohibited from intentionally entering the goal that their opponents are defending or running behind either goal.\n\n**Key Rules:**\n- **Rule 9.15**: Players must not intentionally enter the goal their opponents are defending or run behind either goal.\n\n**Reasoning:**\nThe user asks about the prohibition regarding the goal that opponents are defending. Looking at the provided context, **Rule 9.15** explicitly states that players must not intentionally enter the goal their opponents are defending or run behind either goal.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 9.15",
+      "reasoning": "The student's answer accurately captures the ground truth that players must not intentionally enter the goal their opponents are defending or run behind either goal.",
+      "ragas": {
+        "faithfulness": 0.5,
+        "answer_relevancy": 0.7022584859523696,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In indoor hockey, what is the minimum number of captains required on the field of play at any given time?",
+      "ground_truth": "Two (one from each team)",
+      "bot_answer": "**Direct Answer:**\nEach team must appoint one player as captain, but the rules do not require the captain to be on the field of play at all times (*fih-rules-of-indoor-hockey-2023.pdf*).\n\n**Key Rules:**\n- **Rule 3.1**: One player of each team must be appointed as captain.\n\n**Reasoning:**\nThe user asks about whether a team's captain must be on the field of play at all times. According to the rules of indoor hockey (*fih-rules-of-indoor-hockey-2023.pdf*), each team must appoint one player as captain. However, the rules do not mandate that the captain must be on the field of play at all times; they only specify that each team must appoint one player to this role.",
+      "score": 0,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 3.1",
+      "reasoning": "The student answered that the captain is not required to be on the field of play at all times, whereas the ground truth states that there is a minimum of two captains (one from each team) required on the field of play at any given time.",
+      "ragas": {
+        "faithfulness": 0.75,
+        "answer_relevancy": 0.9077951532419958,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In indoor hockey, what materials are permissible for a hockey stick and any possible additions to the stick, considering safety and suitability for playing hockey?",
+      "ground_truth": "The stick and possible additions may be made of or contain any material other than metal or metallic components, provided it is fit for the purpose of playing hockey and is not hazardous.",
+      "bot_answer": "**Direct Answer**\nHockey sticks and any possible additions may be made of or contain any material, with the exception of metal or metallic components, provided they are fit for the purpose of playing hockey and are not hazardous.\n\n**Key Rules**\n- Hockey sticks and additions may be made of any material other than metal or metallic components, as outlined in *fih-rules-of-indoor-hockey-2023.pdf* (p. 64).\n\n**Reasoning**\nThe user asks about the permissible materials for a hockey stick and its additions. To answer this question, I must look for rules concerning stick composition, safety, and suitability. Checking the pitch and equipment specifications in *fih-rules-of-indoor-hockey-2023.pdf* reveals explicit details about what the stick may be made of, provided it meets the safety and functionality criteria.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": false,
+      "context_guidance": "Derived from 2.21",
+      "reasoning": "The student answer correctly captures all the key facts from the ground truth: it states that the stick and additions may be made of any material other than metal or metallic components, and must be fit for the purpose of playing hockey and not hazardous.",
+      "ragas": {
+        "faithfulness": 0.4444444444444444,
+        "answer_relevancy": 0.8730334666897525,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In indoor hockey, during a penalty corner, if the ball strikes discarded equipment like a hand protector, and this occurs inside the shooting circle, what is the appropriate award?",
+      "ground_truth": "A penalty corner is awarded.",
+      "bot_answer": "**Direct Answer**\nIf the ball strikes discarded equipment inside the circle following a penalty corner, a penalty corner should be awarded.\n\n**Key Rules**\n- **Rule 9.17** (*fih-rules-of-indoor-hockey-2023.pdf*): Following a penalty corner, if the ball hits any discarded equipment (such as a hand protector, knee pads, or a face mask), a free push is awarded if this occurs outside the circle, a penalty corner is awarded if this occurs inside the circle, or a penalty stroke if this prevents a certain goal from being scored.\n\n**Reasoning**\nThe user asks about the correct ruling when the ball hits discarded equipment left on the pitch following a penalty corner in an indoor hockey game. To determine the outcome, the situation must be analyzed based on the location of the incident:\n1. **Analyze the situation:** The game is indoor hockey, specifically following a penalty corner. The ball hits discarded equipment (such as a hand protector, knee pads, or a face mask) that was left on the pitch. \n2. **Identify location:** The incident occurs *inside the circle*.\n3. **Match rules:** According to **Rule 9.17**, if the ball hits any discarded equipment following a penalty corner, the outcome depends on the location: a free push if outside the circle, a penalty corner if inside the circle, or a penalty stroke if it prevents a certain goal from being scored. Since the prompt specifies it occurs inside the circle without mentioning a prevented certain goal, the correct award is a penalty corner.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 9.17",
+      "reasoning": "The student answer correctly identifies that a penalty corner is awarded when the ball strikes discarded equipment inside the circle, matching the ground truth.",
+      "ragas": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.8379999259920832,
+        "context_precision": 0.99999999995,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In hockey5s, where must players leave or enter the court for substitution or any other purpose?",
+      "ground_truth": "Between the centre-line and the quarter-line on their own team bench side of the court as agreed with the umpires.",
+      "bot_answer": "**Direct Answer:**\nPlayers must leave or enter the court for substitution or any other purpose between the centre-line and the quarter-line on their own team bench side of the court, as agreed with the umpires.\n\n**Key Rules:**\n- **Rule 2.5**: Players must leave or enter the court for substitution or any other purpose between the centre-line and the quarter-line on their own team bench side of the court as agreed with the umpires, and substituting players must do so within touching distance of each other (found in *fih-rules-of-hockey-5s-jan-2024-final.pdf*).\n\n**Reasoning:**\nThe user asks about where players must leave or enter the court for substitution or any other purpose. To answer this question regarding player entry and exit during substitution or other activities, we locate the specific rule governing player movement on and off the court in the Hockey5s rules context (*fih-rules-of-hockey-5s-jan-2024-final.pdf*). According to the regulations, this specific zone is restricted to the area between the centre-line and the quarter-line on the team's own bench side.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 2.5",
+      "reasoning": "The student's answer accurately captures all the key facts required by the ground truth, specifically stating that players must leave or enter the court between the centre-line and the quarter-line on their own team bench side of the court as agreed with the umpires.",
+      "ragas": {
+        "faithfulness": 0.8,
+        "answer_relevancy": 0.8076428013172026,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "According to the provided text, what are the umpires responsible for keeping a written record of in hockey5s?",
+      "ground_truth": "Goals scored and suspension cards used.",
+      "bot_answer": "**Direct Answer**\nUmpires are officially responsible for keeping a written record of goals scored and suspension cards used during a match.\n\n**Key Rules**\n- **Rule 11.3** (*fih-rules-of-hockey-5s-jan-2024-final.pdf*): Umpires are responsible for keeping a written record of goals scored and of suspension cards used.\n\n**Reasoning**\nTo answer the question, I need to check the responsibilities of umpires regarding written records in Hockey5s from the provided context. Looking through the rules governing umpires, **Rule 11.3** explicitly states what umpires are responsible for recording.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 11.3",
+      "reasoning": "The student answer correctly identifies that umpires are responsible for keeping a written record of goals scored and suspension cards used, which matches the ground truth answer.",
+      "ragas": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.779128708657723,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In hockey5s, when taking a centre pass, where must all players other than the player taking the pass be positioned?",
+      "ground_truth": "All players other than the player taking the centre pass must be in the half of the court which includes the goal they are defending.",
+      "bot_answer": "**Direct Answer:**\nWhen taking a centre pass in Hockey5s, all players other than the player taking the pass must be positioned in the half of the court that includes the goal they are defending.\n\n**Key Rules:**\n- All players other than the player taking the centre pass must be in the half of the court which includes the goal they are defending (**Rule 6.4**, *fih-rules-of-hockey-5s-jan-2024-final.pdf*).\n\n**Reasoning:**\nThe user asks about the positioning requirements for players when a centre pass is taken in Hockey5s. To answer this, we examine the rules governing the execution of a centre pass. According to **Rule 6.4** in *fih-rules-of-hockey-5s-jan-2024-final.pdf*, specifically subsection (c), all players\u2014excluding the individual actually taking the centre pass\u2014are required to be positioned within the specific half of the court that contains the goal they are defending.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 6.4",
+      "reasoning": "The student correctly identified that all players other than the one taking the centre pass must be positioned in the half of the court that includes the goal they are defending, matching the ground truth.",
+      "ragas": {
+        "faithfulness": 0.4,
+        "answer_relevancy": 0.9605902528065121,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In hockey5s, according to the rules, what constitutes dangerous play, and where is the penalty awarded?",
+      "ground_truth": "Dangerous play involves playing the ball dangerously or in a way that leads to dangerous play. A ball can be dangerous in itself or when it causes legitimate evasive action by players. The penalty is awarded where the action causing the danger took place.",
+      "bot_answer": "**Direct Answer:**\nPlayers must never play the ball dangerously or engage in actions that lead to dangerous play. The penalty for dangerous play is awarded directly where the action causing the danger took place. \n\n**Key Rules:**\n- **Rule 9.7**: Players must not play the ball dangerously or in a way that leads to dangerous play; a ball can be dangerous in itself or when it causes legitimate evasive action, with the penalty awarded where the action causing the danger took place.\n- **Rule 9.8**: Players must not intentionally raise the ball from a hit except for a safe shot at goal, though unintentional raising is not an offence unless dangerous; furthermore, a flick or scoop towards an opponent within 4 metres is considered dangerous, while opponents clearly running into a shot or attacker without attempting to play the ball should be penalised.\n- **Rule 9.2**: Players on the court must hold their stick properly, avoid using it in a dangerous way, and never lift it over the heads of other players.\n\n**Reasoning:**\nThe user asks about what constitutes dangerous play and where the resulting penalty is awarded based on the provided context. To answer this, I identified what constitutes dangerous play and where the resulting penalty is awarded by analyzing the rules related to dangerous play (specifically rules addressing playing the ball dangerously, raising the ball, and stick usage) and locating the specific rule regarding penalty placement.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 9.7",
+      "reasoning": "The student answer correctly identifies what constitutes dangerous play (playing the ball dangerously or in a way that leads to dangerous play, including causing legitimate evasive action) and correctly states that the penalty is awarded where the action causing the danger took place.",
+      "ragas": {
+        "faithfulness": 0.7058823529411765,
+        "answer_relevancy": 0.7695620444633743,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In hockey5s, according to the rules, when is the ball considered out of play?",
+      "ground_truth": "The ball is out of play when it passes completely over the boundary-board on the side-line or back-line.",
+      "bot_answer": "**Direct Answer**\nIn Hockey5s, the ball is considered out of play when it travels completely over the side-line or over the back-line.\n\n**Key Rules**\n- **Rule 7.3**: When the ball goes over the side-line, play is re-started not more than one metre from where it crossed the side-line using free hit procedures.\n- **Rule 7.4**: When the ball goes over the back-line without a goal being scored, play is re-started depending on who touched it last (whether played by an attacker, unintentionally by a defender, or intentionally by a defender).\n\n**Reasoning**\nThe user asks about when the ball is considered out of play. To answer this, we review the context for rules regarding the ball going outside the court (side-line and back-line). Specifically, **Rule 7.3** and **Rule 7.4** of *fih-rules-of-hockey-5s-jan-2024-final.pdf* detail scenarios when the ball travels over the side-line or over the back-line, marking those points as when the ball is out of play and needs a re-start.",
+      "score": 0,
+      "retrieval_hit": false,
+      "citation_hit": false,
+      "context_guidance": "Derived from 7.1",
+      "reasoning": "The student failed to mention that the ball must pass *completely* over the boundary-boards on the side-line or back-line, which is a critical distinction in Hockey5s rules (since the perimeter boards are part of the playing area, and the ball is only out when it goes completely *over* them).",
+      "ragas": {
+        "faithfulness": 0.5714285714285714,
+        "answer_relevancy": 0.9769388100099551,
+        "context_precision": 0.0,
+        "context_recall": 0.0
+      }
+    },
+    {
+      "question": "What penalty is given for an unintentional offense by a defender that prohibits scoring of a goal?",
+      "ground_truth": "the penalty will be a stroke",
+      "bot_answer": "**Direct Answer**\nA penalty stroke is awarded when a defender commits an offence in the circle that prevents the probable scoring of a goal.\n\n**Key Rules**\n- **Rule 12.4**: A penalty stroke is awarded for an offence by a defender in the circle which prevents the probable scoring of a goal.\n\n**Reasoning**\nThe user asks about the consequence of an unintentional offence by a defender inside the circle that stops a likely goal. Looking at **Rule 12.4(a)** from *fih-rules-of-hockey-2026-final.pdf*, a penalty stroke is awarded for any offence by a defender in the circle which prevents the probable scoring of a goal, regardless of whether that offence is intentional or unintentional.",
+      "score": 1,
+      "retrieval_hit": null,
+      "citation_hit": true,
+      "context_guidance": "Derived from 12.4",
+      "reasoning": "The student correctly identified that a penalty stroke is awarded, which matches the ground truth answer.",
+      "ragas": {
+        "faithfulness": 0.8,
+        "answer_relevancy": 0.8140463788534011,
+        "context_precision": 0.30952380950833336,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "Can a shot at goal during a penalty corner result in a goal?",
+      "ground_truth": "If below the backboard this will be a goal, if above, it depends if the shot at goal was the first shot attepmted and whether it was a hit. The first shot can not be high if it is a hit, while a second attempt can.",
+      "bot_answer": "**Direct Answer**\nYes, a shot at goal during a penalty corner can result in a goal, provided that the ball has travelled outside the circle first and specific height and safety conditions are met.\n\n**Key Rules**\n- A goal cannot be scored until the ball has travelled outside the circle. (**Rule 13.3**)\n- If the first shot at goal is a hit, the ball must cross the goal-line (or be on a path to do so) at a height of not more than 460 mm (the height of the backboard) before any deflection, for a goal to be scored. (**Rule 13.3**)\n- For second and subsequent hits at the goal, and for flicks, deflections, and scoops, it is permitted to raise the ball to any height as long as it is not dangerous. (**Rule 13.3**)\n\n**Reasoning**\nThe user asks whether a shot at goal during a penalty corner can result in a goal. To determine this, we look at the rules concerning the execution and restrictions of a penalty corner found in *fih-rules-of-hockey-2026-final.pdf*. **Rule 13.3(k)** explicitly states that a goal cannot be scored until the ball has travelled outside the circle. Furthermore, **Rule 13.3(l)** outlines the specific height restrictions for a first shot at goal if it is a hit, and subsequent rules permit higher elevations for other types of shots (like flicks, deflections, or scoops), confirming that goals can indeed be scored from penalty corner shots provided these conditions are met.",
+      "score": 1,
+      "retrieval_hit": null,
+      "citation_hit": true,
+      "context_guidance": "Derived from 13.3",
+      "reasoning": "The student correctly identifies that a penalty corner shot can result in a goal, and accurately explains the conditions regarding the height of the first shot if it is a hit (below the backboard) versus subsequent shots or non-hits (which can be higher as long as they are not dangerous), matching the ground truth answer.",
+      "ragas": {
+        "faithfulness": 0.6923076923076923,
+        "answer_relevancy": 0.9999999999999996,
+        "context_precision": 0.3333333333,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "What is a flick?",
+      "ground_truth": "Pushing the ball so that it is raised off the ground.",
+      "bot_answer": "**Direct Answer**\nA flick is defined as pushing the ball so that it is raised off the ground.\n\n**Key Rules**\n- **Terminology (p.13, *fih-rules-of-hockey-2026-final.pdf*)**: Defines a flick as pushing the ball so that it is raised off the ground.\n\n**Reasoning**\nThe user asks about the definition of a flick in field hockey. To answer the question \"What is a flick?\", we need to look at the terminology section of the official FIH Rules of Hockey (*fih-rules-of-hockey-2026-final.pdf*). By locating the definition of \"Flick\" in the text, we can provide the exact definition as outlined in the rules.",
+      "score": 1,
+      "retrieval_hit": null,
+      "citation_hit": null,
+      "context_guidance": "",
+      "reasoning": "The student correctly identified that a flick is pushing the ball so that it is raised off the ground, matching the ground truth.",
+      "ragas": {
+        "faithfulness": 0.2,
+        "answer_relevancy": 0.619639955834917,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "What is the back-line?",
+      "ground_truth": "The shorter (55 metres) perimeter line.",
+      "bot_answer": "**Direct Answer:**\nThe back-line is the shorter perimeter line of the hockey field, measuring 55 metres in length.\n\n**Key Rules:**\n- The back-lines are the shorter (55 metres) perimeter lines as defined in the terminology section (*fih-rules-of-hockey-2026-final.pdf*, p. 13).\n- The field of play is rectangular, 91.40 metres long bounded by side-lines and 55 metres wide bounded by back-lines (*fih-rules-of-hockey-2026-final.pdf*, p. 56).\n- Back-lines are specifically detailed as 55.00 metres long perimeter lines under field and equipment specifications (*fih-rules-of-hockey-2026-final.pdf*, p. 58).\n\n**Reasoning:**\nThe user asks about the definition and properties of the back-line. To answer this, I reviewed the terminology and field specifications sections in the provided rules (*fih-rules-of-hockey-2026-final.pdf*). The text explicitly defines the back-line as the shorter perimeter line of the field, specifically measuring 55 metres in length, and notes its role in bounding the width of the rectangular field of play.",
+      "score": 1,
+      "retrieval_hit": null,
+      "citation_hit": null,
+      "context_guidance": "",
+      "reasoning": "The student answer correctly identifies the back-line as the shorter perimeter line measuring 55 metres, which matches the ground truth.",
+      "ragas": {
+        "faithfulness": 0.8181818181818182,
+        "answer_relevancy": 0.6359740878898277,
+        "context_precision": 0.8333333333055556,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "What happens if a team has more than the permitted number of players on the field?",
+      "ground_truth": "If a team has more than the permitted number of players on the field, time should be stopped to correct the situation. A personal penalty may be awarded against the captain of the team involved, if inadvertently having too many players on the pitch occurs for a very short period of time and does not materially affect the match. In cases where this occurs and materially affects the match, a personal penalty must be awarded against the captain of the team involved.",
+      "bot_answer": "**Direct Answer:**\nWhen a team has more than the permitted number of players on the field, time should be stopped immediately to correct the situation. Depending on the impact of the extra players, personal penalties may apply to the team's captain, and play is restarted with a free hit (unless another penalty was awarded just before the stoppage).\n\n**Key Rules:**\n- **Rule 2.1**: Specifies that a maximum of eleven players from each team take part in play, and outlines the exact procedures, personal penalties (including a mandatory yellow card if it materially affects the match), and restart methods when too many players are on the field.\n\n**Reasoning:**\nThe user asks about the procedure and consequences when a team has more than the permitted number of players on the field. According to **Rule 2.1** in *fih-rules-of-hockey-2026-final.pdf*, time should be stopped to correct the situation. If having too many players occurred for a very short period and did not materially affect the match, a personal penalty may be awarded against the team's captain. If it materially affects the match, a yellow card must be awarded against the captain. Decisions made prior to correcting the situation remain valid if play was already re-started, and play restarts with a free hit to the opposing team unless another penalty was awarded against the offending team immediately before time was stopped.",
+      "score": 1,
+      "retrieval_hit": null,
+      "citation_hit": true,
+      "context_guidance": "Derived from 2.1",
+      "reasoning": "The student correctly identified that time should be stopped to correct the situation, that a personal penalty may be awarded if it occurs for a short time without materially affecting the match, and that a personal penalty (yellow card) must be awarded against the captain if it materially affects the match. This matches all the essential points of the ground truth answer.",
+      "ragas": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.8324661594596817,
+        "context_precision": 0.9999999999,
+        "context_recall": 0.6666666666666666
+      }
+    },
+    {
+      "question": "What penalty is given for an intentional offense by a defender on an attacker in ball possession in the circle?",
+      "ground_truth": "When a defender makes an intnetional offense the penalty will be a stroke",
+      "bot_answer": "**Direct Answer:**\nA penalty stroke is awarded for this intentional offense.\n\n**Key Rules:**\n- **Rule 12.4**: A penalty stroke is awarded for an intentional offence in the circle by a defender against an opponent who has possession of the ball or an opportunity to play the ball.\n\n**Reasoning:**\nThe user asks about the correct penalty when a defender commits an intentional offense inside the circle against an opponent who has possession or an opportunity to play the ball. \n\n*   **Location:** The offense takes place inside the circle.\n*   **Actor:** The offender is a defender, and the victim is an attacker.\n*   **Action:** The offense is intentional, and the attacker has possession of the ball or an opportunity to play the ball.\n*   **Matching Rule:** According to **Rule 12.4**, an intentional offence in the circle by a defender against an opponent who has possession of the ball or an opportunity to play the ball results in a penalty stroke.",
+      "score": 1,
+      "retrieval_hit": null,
+      "citation_hit": true,
+      "context_guidance": "Derived from 12.4",
+      "reasoning": "The student correctly identified that the penalty for an intentional offense by a defender on an attacker in possession within the circle is a penalty stroke, matching the ground truth.",
+      "ragas": {
+        "faithfulness": 0.7777777777777778,
+        "answer_relevancy": 0.949900531657939,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In outdoor field hockey, what is the maximum interior diameter, inclusive of any additional coverings, that a stick must pass through a ring to be legal?",
+      "ground_truth": "51 mm",
+      "bot_answer": "**Direct Answer**\nThe field hockey stick, inclusive of any additional coverings used, must be able to pass through a ring with an interior diameter of 51 mm.\n\n**Key Rules**\n- **Rule 4.6**: Inclusive of any additional coverings used, the stick must be able to pass through a ring with an interior diameter of 51 mm.\n\n**Reasoning**\nThe user asks about the maximum interior diameter of a ring that a field hockey stick must be able to pass through. To answer this question regarding the stick's dimensions, we look for specifications relating to stick properties in *fih-rules-2026-final.pdf*. The text explicitly states that inclusive of any additional coverings, the stick must be able to pass through a ring with an interior diameter of 51 mm.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": false,
+      "context_guidance": "Derived from 2.17",
+      "reasoning": "The student correctly identified the maximum interior diameter as 51 mm, matching the ground truth.",
+      "ragas": {
+        "faithfulness": 0.6,
+        "answer_relevancy": 0.9407607360456591,
+        "context_precision": 0.99999999995,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In outdoor field hockey, what is the acceptable weight range, in grams, for a standard field hockey ball?",
+      "ground_truth": "Between 156 grams and 163 grams",
+      "bot_answer": "**Direct Answer:**\nA standard field hockey ball weighs between 156 grams and 163 grams.\n\n**Key Rules:**\n- **Equipment Specifications**: A standard field hockey ball weighs between 156 grams and 163 grams (*fih-rules-of-hockey-2026-final.pdf*, p. 70).\n\n**Reasoning:**\nThe user asks about the acceptable weight range for a standard field hockey ball. To find this, we locate the specifications for the ball in the equipment rules section of the text (*fih-rules-of-hockey-2026-final.pdf*), which details its physical properties, including its weight range of 156 grams to 163 grams.",
+      "score": 1,
+      "retrieval_hit": false,
+      "citation_hit": false,
+      "context_guidance": "Derived from 3.1",
+      "reasoning": "The student correctly identified the acceptable weight range for a standard field hockey ball as between 156 grams and 163 grams, matching the ground truth answer.",
+      "ragas": {
+        "faithfulness": 0.8333333333333334,
+        "answer_relevancy": 0.9379290552819128,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "Regarding field hockey sticks used in outdoor play, what power does the FIH reserve the right to exercise concerning stick properties, even if they technically meet the specifications?",
+      "ground_truth": "The FIH reserves the right to prohibit any stick which, in the opinion of the FIH Rules Committee, is unsafe or likely to have a detrimental impact on playing the game.",
+      "bot_answer": "**Direct Answer:**\nThe FIH reserves the right to prohibit any stick which, in the opinion of the FIH Rules Committee, is unsafe or likely to have a detrimental impact on playing the game, even if the stick's properties are described as explicitly as possible in the specifications.\n\n**Key Rules:**\n- **Stick Specifications and FIH Authority** (*fih-rules-of-hockey-2026-final.pdf*, p. 64): Although stick properties are described as explicitly as possible, the FIH reserves the right to prohibit any stick deemed unsafe or likely to have a detrimental impact on playing the game by the FIH Rules Committee.\n\n**Reasoning:**\nThe user asks about a static rule/definition regarding the power the FIH reserves concerning stick properties that may be outside or within specifications. Searching the context for the FIH's reservation of rights regarding stick properties yields the text found in *fih-rules-of-hockey-2026-final.pdf* on page 64, which establishes that properties outside the specifications are not permitted, and grants the FIH Rules Committee the ultimate authority to prohibit any stick considered unsafe or detrimental to the game.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": false,
+      "context_guidance": "Derived from 2.1",
+      "reasoning": "The student correctly identified that the FIH reserves the right to prohibit any stick deemed unsafe or likely to have a detrimental impact on playing the game by the FIH Rules Committee, which matches the ground truth.",
+      "ragas": {
+        "faithfulness": 0.8571428571428571,
+        "answer_relevancy": 0.8907601052626314,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In outdoor field hockey, under what circumstances can the planned length of a temporary suspension for a player be increased?",
+      "ground_truth": "The intended duration of a temporary suspension may be extended for misconduct by a player while suspended.",
+      "bot_answer": "### Direct Answer\nThe intended duration of a temporary suspension can be extended if the suspended player commits misconduct while suspended (**Rule 14.4**).\n\n### Key Rules\n- **Rule 14.4** (*fih-rules-of-hockey-2026-final.pdf*): The intended duration of a temporary suspension may be extended for misconduct by a player while suspended.\n\n### Reasoning\nThe user asks about the conditions under which the planned length of a temporary suspension for a player can be increased. To determine when the planned length of a temporary suspension for a player can be increased, we examine the rules regarding player suspensions. Specifically, **Rule 14.4** dictates that the duration of a temporary suspension may be extended due to subsequent misconduct by the player while they are already suspended.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 14.4",
+      "reasoning": "The student correctly identified that the duration of a temporary suspension can be extended due to misconduct by the player while suspended, matching the ground truth.",
+      "ragas": {
+        "faithfulness": 0.6,
+        "answer_relevancy": 0.786079743185774,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In outdoor field hockey, under what specific circumstances is a penalty stroke awarded if the ball strikes a piece of equipment within the circle?",
+      "ground_truth": "A penalty stroke may be awarded if the ball hits a piece of equipment lying in the circle and a probable goal is prevented.",
+      "bot_answer": "**Direct Answer:**\nFollowing a penalty corner, a penalty stroke is awarded if the ball hits any discarded equipment (such as a hand protector, knee pad, or face mask) inside the circle and that action prevents the probable scoring of a goal (**Rule 13.3**, *fih-rules-of-hockey-2026-final.pdf*).\n\n**Key Rules:**\n- **Rule 13.3**: Following a penalty corner, if the ball hits any discarded equipment inside the circle, a penalty corner is awarded unless the action prevents the probable scoring of a goal, in which case a penalty stroke shall be awarded.\n\n**Reasoning:**\nThe user asks about specific circumstances where a penalty stroke is awarded specifically when the ball strikes a piece of equipment inside the circle. \n\nTo determine the correct penalty, we examine the procedures and guidance notes for penalty corners. According to **Rule 13.3** in *fih-rules-of-hockey-2026-final.pdf*, after a penalty corner has been conducted, field players are required to remove their protective equipment safely. If the ball subsequently strikes any discarded equipment (like a face mask or hand protector):\n1. If this occurs outside the circle, a free hit is awarded.\n2. If it occurs inside the circle, a penalty corner is normally awarded.\n3. However, if that impact with the discarded equipment inside the circle prevents the probable scoring of a goal, the ruling escalates, and a penalty stroke must be awarded.",
+      "score": 1,
+      "retrieval_hit": false,
+      "citation_hit": false,
+      "context_guidance": "Derived from 12.4",
+      "reasoning": "The student correctly identified that a penalty stroke is awarded when the ball hits a piece of equipment (discarded equipment) within the circle and this prevents the probable scoring of a goal.",
+      "ragas": {
+        "faithfulness": 0.5,
+        "answer_relevancy": 0.8618531113012547,
+        "context_precision": 0.249999999975,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In outdoor field hockey, a field player leaves the field for refreshment. Where are they permitted to re-enter the field, assuming it's not a substitution?",
+      "ground_truth": "Between the 23 metres areas on the side of the field used for substitutions.",
+      "bot_answer": "**Direct Answer**\nWhen a field player leaves the field for refreshment\u2014or for any reason other than substitution\u2014they are only permitted to re-enter between the 23-metres areas on the side of the field used for substitutions.\n\n**Key Rules**\n- **Rule 2.4**: Field players who leave the field for injury treatment, refreshment, to change equipment, or for some reason other than substitution are only permitted to re-enter between the 23-metres areas on the side of the field used for substitutions (*fih-rules-of-hockey-2026-final.pdf*).\n\n**Reasoning**\nThe user asks about the re-entry point for a field player who leaves the field for refreshment (which falls under leaving the field for reasons other than substitution). Looking at the regulations governing how players leave and re-enter the field of play during a match, **Rule 2.4** specifically dictates that whenever a field player steps off the field for injury treatment, refreshment, equipment changes, or any reason other than a formal substitution, they must return to the field strictly between the two 23-metres areas along the designated substitution side of the field.",
+      "score": 1,
+      "retrieval_hit": false,
+      "citation_hit": true,
+      "context_guidance": "Derived from 2.4",
+      "reasoning": "The student correctly identified that the player must re-enter between the 23-metres areas on the side of the field used for substitutions.",
+      "ragas": {
+        "faithfulness": 0.8,
+        "answer_relevancy": 0.8627200497676072,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In outdoor field hockey, under what circumstances can an umpire issue a caution, warning (green card), or a temporary (yellow card) or permanent (red card) suspension, and can these penalties be given in combination?",
+      "ground_truth": "Umpires must deal firmly with abuse of opponents, umpires or other technical officials verbally or through body language and attitude. Cautions, warnings and suspensions can be given in isolation or in combination with another penalty.",
+      "bot_answer": "**Direct Answer:**\nUmpires must deal firmly with verbal or body-language abuse towards opponents, umpires, or technical officials, and may issue cautions, warnings (green cards), temporary suspensions (yellow cards), or permanent suspensions (red cards), which can be given in isolation or in combination with other penalties.\n\n**Key Rules:**\n- **Rule 2.3**: Umpires must deal firmly when players verbally or through body language/attitude abuse opponents, umpires, or other technical officials, issuing appropriate cautions, warnings, or suspensions.\n- **Rule 2.3**: Cautions, warnings (green cards), temporary suspensions (yellow cards), and permanent suspensions (red cards) can be given in isolation or in combination with another penalty.\n- **Rule 14.1**: For any offence, an offending player may be cautioned, warned and temporarily suspended for 2 minutes of playing time with a green card, temporarily suspended for a minimum of 5 minutes with a yellow card, or permanently suspended with a red card.\n\n**Reasoning:**\nThe user asks about the rules regarding personal penalties, misconduct, and card management by umpires. To answer the question, we need to examine how umpires must handle verbal or body-language abuse towards opponents, umpires, or technical officials according to the *fih-rules-of-hockey-2026-final.pdf*. The rules state that umpires must deal firmly with such abuse and may issue cautions, warnings (green cards), temporary suspensions (yellow cards), or permanent suspensions (red cards). Furthermore, these personal penalties can be given either in isolation or in combination with other penalties.",
+      "score": 1,
+      "retrieval_hit": false,
+      "citation_hit": true,
+      "context_guidance": "Derived from 2.3",
+      "reasoning": "The student's answer accurately captures all the key facts from the ground truth: it specifies that umpires must deal firmly with verbal or body language/attitude abuse of opponents, umpires, or technical officials, and correctly states that cautions, warnings, and suspensions can be given in isolation or in combination with other penalties.",
+      "ragas": {
+        "faithfulness": 0.8,
+        "answer_relevancy": 0.7193811572750457,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In outdoor field hockey, during a penalty corner, if the ball strikes a discarded hand protector inside the shooting circle, what is the appropriate restart?",
+      "ground_truth": "A penalty corner should be awarded.",
+      "bot_answer": "### Direct Answer\nWhen the ball hits discarded equipment inside the circle after a penalty corner, a penalty corner is awarded, unless it prevents the probable scoring of a goal, in which case a penalty stroke is awarded.\n\n### Key Rules\n- Following a penalty corner, if the ball hits any discarded equipment (such as a hand protector, knee pad, or face mask) inside the circle, a penalty corner shall be awarded unless the action prevents the probable scoring of a goal, in which case a penalty stroke shall be awarded (**Rule 13.3**, *fih-rules-of-hockey-2026-final.pdf*).\n\n### Reasoning\nThe user asks about the ruling when the ball hits discarded equipment, such as a hand protector, located inside the circle following a penalty corner. \n\nTo analyze this situation, we look at the procedures governing penalty corners and equipment management as outlined in the official rules. When players discard protective gear (like hand protectors, knee pads, or face masks) during or after a penalty corner, that equipment remains on the pitch temporarily. If the ball subsequently strikes this discarded equipment inside the circle, the game must be penalized. Specifically, if it happens inside the circle, a penalty corner is the standard restart, except when that contact stops an action that would have likely resulted in a goal\u2014in which case the more severe penalty of a penalty stroke is applied.",
+      "score": 1,
+      "retrieval_hit": false,
+      "citation_hit": false,
+      "context_guidance": "Derived from 9.16",
+      "reasoning": "The student correctly identified that a penalty corner is the appropriate restart (and even provided the nuanced exception regarding a probable goal, which aligns with the correct rules).",
+      "ragas": {
+        "faithfulness": 0.6875,
+        "answer_relevancy": 0.8561154659620823,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In indoor field hockey, under what circumstances can the planned length of a temporary suspension for a player be increased?",
+      "ground_truth": "The intended duration of a temporary suspension may be extended for misconduct by a player while suspended.",
+      "bot_answer": "**Direct Answer**\nThe intended duration of a temporary suspension can be extended due to a player's misconduct while they are already suspended.\n\n**Key Rules**\n- **Rule 14.4**: The intended duration of a temporary suspension may be extended for misconduct by a player while suspended as outlined in *fih-rules-of-indoor-hockey-2023.pdf*.\n\n**Reasoning**\nThe user asks about the extension of a temporary suspension for a player. To answer this question regarding the extension of a temporary suspension, I need to look for rules governing personal penalties and temporary suspensions in indoor hockey. Reviewing the provided context, **Rule 14.4** explicitly addresses the duration of a temporary suspension and states that it may be extended if the player commits further misconduct while serving their suspension.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 14.4",
+      "reasoning": "The student's answer correctly identifies that the duration of a temporary suspension can be extended due to misconduct by the player while serving the suspension, which matches the ground truth.",
+      "ragas": {
+        "faithfulness": 0.6666666666666666,
+        "answer_relevancy": 0.73085074140944,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In indoor hockey, what is the signal for a stick obstruction?",
+      "ground_truth": "Hold one arm out and downwards in front of the body half-way between vertical and horizontal; touch the forearm with the other hand.",
+      "bot_answer": "**Direct Answer**\nThe provided official rules text details specific signals for conduct of play offences such as dangerous play, misconduct, and kicks, as well as general match penalties (free push, penalty corner, penalty stroke), but does not define a unique visual signal explicitly titled \"stick obstruction\".\n\n**Key Rules**\n- **Rule 4.5**: Signals for conduct of play offences must be shown if there is doubt about the reason for the decision, including **dangerous play** (place one forearm diagonally across the chest), **misconduct and/or bad temper** (stop play and make a calming movement by moving both hands slowly up and down, palms downward, in front of the body), and **kick** (slightly raise a leg and touch it near the foot or ankle with the hand).\n- **Rule 4.6**: Details penalty signals such as advantage, free push, penalty corner, and penalty stroke.\n- **Rule 9.13**: Defines obstruction offences, outlining that players must not obstruct an opponent who is attempting to play the ball (such as by backing into them, physically interfering with their stick or body, or shielding the ball).\n\n**Reasoning**\nThe user asks for the umpire signal for stick obstruction (or general obstruction/conduct of play) in indoor hockey based on the provided context as outlined in *fih-rules-of-indoor-hockey-2023.pdf*. \n\nChecking the rules for signals:\n- **Rule 4.5** covers conduct of play signals (dangerous play, misconduct, kick).\n- **Rule 4.6** covers penalty signals (advantage, free push, penalty corner, penalty stroke).\n- **Rule 9.13** covers obstruction rules, but the rules snippet does not specify a distinct visual umpire signal exclusively named \"stick obstruction\" in the provided text, though conduct of play signals like dangerous play or others may apply. \n\nSince the exact signal for \"stick obstruction\" is not explicitly detailed as a standalone signal name in the provided snippets, the response details the conduct of play and general signal guidelines provided in the official text.",
+      "score": 0,
+      "retrieval_hit": false,
+      "citation_hit": true,
+      "context_guidance": "Derived from 4.5",
+      "reasoning": "The student failed to provide the correct ground truth answer for the signal of a stick obstruction (holding one arm out and downwards in front of the body half-way between vertical and horizontal, and touching the forearm with the other hand), instead stating that the text did not define it.",
+      "ragas": {
+        "faithfulness": 0.9411764705882353,
+        "answer_relevancy": 0.9617403614866218,
+        "context_precision": 0.0,
+        "context_recall": 0.0
+      }
+    },
+    {
+      "question": "In indoor field hockey, a defender intentionally plays the ball over their own back-line, and the ball is not deflected by the goalkeeper. How is play restarted?",
+      "ground_truth": "Play is restarted with a penalty corner.",
+      "bot_answer": "**Direct Answer**\nWhen a defender intentionally plays the ball over their own back-line without a goalkeeper deflecting it, play is restarted with a penalty corner.\n\n**Key Rules**\n- Play is re-started with a penalty corner if the ball is played intentionally by a defender over the back-line, unless it was deflected by a goalkeeper (**Rule 7.4**, *fih-rules-of-indoor-hockey-2023.pdf*).\n\n**Reasoning**\nThe user asks about the proper restart of play when a defender intentionally plays the ball over their own back-line without a goalkeeper's deflection. The situation involves a game action where the actor (defender) intentionally plays the ball over their own back-line, and it is not deflected by a goalkeeper. Looking at the rules regarding the ball outside the pitch over the back-line, **Rule 7.4** specifies that if the ball is played intentionally by a defender (unless deflected by a goalkeeper) over the back-line, play is re-started with a penalty corner.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 7.4",
+      "reasoning": "The student correctly identified that play is restarted with a penalty corner, matching the ground truth answer.",
+      "ragas": {
+        "faithfulness": 0.8,
+        "answer_relevancy": 0.8381756769350016,
+        "context_precision": 0.5166666666494445,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In indoor hockey, according to the provided text, what specific types of decisions is each umpire responsible for in one half of the pitch?",
+      "ground_truth": "Each umpire is responsible for decisions on free pushes in the circle, penalty corners, penalty strokes and goals in one half of the pitch.",
+      "bot_answer": "**Direct Answer**: \nIn each half of the pitch, each umpire is primarily responsible for decisions regarding free pushes in the circle, penalty corners, penalty strokes, and goals.\n\n**Key Rules**:\n- **Rule 11.3** (*fih-rules-of-indoor-hockey-2023.pdf*): Each umpire is responsible for decisions on free pushes in the circle, penalty corners, penalty strokes, and goals in one half of the pitch.\n\n**Reasoning**: \nThe user asks about the specific responsibilities of each umpire within their assigned half of the pitch. To answer the question, we need to locate the specific rule regarding the responsibilities of each umpire within their half of the pitch. Reviewing the provided context, **Rule 11.3** from *fih-rules-of-indoor-hockey-2023.pdf* explicitly details the types of key scoring and restart decisions an umpire is responsible for in one half of the pitch.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 11.3",
+      "reasoning": "The student answer correctly identifies all the specific types of decisions each umpire is responsible for (free pushes in the circle, penalty corners, penalty strokes, and goals), matching the ground truth.",
+      "ragas": {
+        "faithfulness": 0.4,
+        "answer_relevancy": 0.9035309018118365,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In indoor hockey, according to the rules, what constitutes dangerous play, and what is a specific example of when a ball is considered dangerous?",
+      "ground_truth": "Dangerous play involves playing the ball in a way that is dangerous. A ball is considered dangerous when it causes legitimate evasive action by players of the opposition.",
+      "bot_answer": "**Direct Answer:**\nIn indoor hockey, players are prohibited from playing the ball dangerously or in any way that leads to dangerous play. \n\n**Key Rules:**\n- Players must not play the ball dangerously or in a way that leads to dangerous play (**Rule 9.8**, *fih-rules-of-indoor-hockey-2023.pdf*).\n- A ball is considered dangerous specifically when it causes legitimate evasive action by players of the opposition (**Rule 9.8**, *fih-rules-of-indoor-hockey-2023.pdf*).\n- Playing the ball deliberately and hard into an opponent's stick, feet, or hands with an associated risk of injury when the opponent is in a 'set' or stationary position is considered a dangerous action (**Rule 9.8**, *fih-rules-of-indoor-hockey-2023.pdf*).\n- Players collecting, turning, and trying to play the ball deliberately through a defending player who is close or trying to play the ball are engaging in dangerous play (**Rule 9.8**, *fih-rules-of-indoor-hockey-2023.pdf*).\n- A defender who clearly runs into a shot or into the penalty corner taker without attempting to play the ball with their stick must be penalized for dangerous play (**Rule 13.3**, *fih-rules-of-indoor-hockey-2023.pdf*).\n\n**Reasoning:**\nThe user asks about what constitutes dangerous play/actions regarding the ball in indoor hockey, along with specific examples of when a ball is considered dangerous. \n\nTo determine this, the rules define dangerous actions involving the ball under **Rule 9.8** of *fih-rules-of-indoor-hockey-2023.pdf*. A primary indicator of a dangerous ball is when it forces opponents to take legitimate evasive action. Additionally, specific tactical actions are explicitly flagged as dangerous, such as hitting the ball hard and deliberately into an opponent's stick, feet, or hands while they are stationary or set, or trying to force the ball through a nearby defender. Furthermore, during penalty corners, **Rule 13.3** dictates that defenders cannot recklessly run into a shot or the taker without attempting to play the ball with their stick, as this is also penalized as dangerous play.",
+      "score": 1,
+      "retrieval_hit": false,
+      "citation_hit": true,
+      "context_guidance": "Derived from 9.8",
+      "reasoning": "The student answer correctly identifies that dangerous play involves playing the ball in a way that is dangerous, and explicitly includes the specific example that a ball is considered dangerous when it causes legitimate evasive action by players of the opposition, matching the ground truth.",
+      "ragas": {
+        "faithfulness": 0.9090909090909091,
+        "answer_relevancy": 0.9504385145392527,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In indoor hockey, what is the maximum number of players from each team allowed on the pitch simultaneously?",
+      "ground_truth": "Six",
+      "bot_answer": "**Direct Answer:**\nA maximum of six players from each team are allowed on the pitch simultaneously during a match.\n\n**Key Rules:**\n- **Rule 2.1** (*fih-rules-of-indoor-hockey-2023.pdf*): A maximum of six players from each team may take part in play at any particular time during the match. If a team exceeds this limit, time should be stopped, and penalties may apply.\n- **Rule 9.1** (*fih-rules-of-indoor-hockey-2023.pdf*): A match is played between two teams with not more than six players of each team on the pitch at the same time.\n\n**Reasoning:**\nThe user asks about the maximum number of players allowed on the pitch simultaneously. To determine this, we look at the composition of teams rules found in *fih-rules-of-indoor-hockey-2023.pdf*. Both **Rule 2.1** and **Rule 9.1** establish that no more than six players from each team may take part in play on the pitch at the same time.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 9.1",
+      "reasoning": "The student correctly identified the maximum number of players as six, which matches the ground truth answer.",
+      "ragas": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.9787271282564322,
+        "context_precision": 0.99999999995,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In indoor field hockey, where is the table for timekeeping positioned relative to the team benches?",
+      "ground_truth": "The table for timekeeping is placed outside and at the centre of the pitch on the same side as and between the team benches.",
+      "bot_answer": "**Direct Answer**\nThe timekeeping table is located outside and at the centre of the pitch on the same side as the team benches, positioned directly between them. A bench for each team is placed outside and along one side of the pitch.\n\n**Key Rules**\n- **Rule 1.8** (*fih-rules-of-indoor-hockey-2023.pdf*, p. 59): A bench for each team is placed outside and along one side of the pitch, and a table for timekeeping is placed outside and at the centre of the pitch on the same side as and between the team benches. Their positioning must not be dangerous to players or umpires.\n\n**Reasoning**\nThe user asks about the positioning of the timekeeping table relative to the team benches. To answer this question, we look for rules detailing the setup of the pitch facilities, specifically the benches and the timekeeping table. According to the specifications in *fih-rules-of-indoor-hockey-2023.pdf*, a bench for each team is placed outside and along one side of the pitch, while the timekeeping (or technical) table is positioned outside and at the centre of the pitch on that same side, directly between the team benches.",
+      "score": 1,
+      "retrieval_hit": false,
+      "citation_hit": true,
+      "context_guidance": "Derived from 1.8",
+      "reasoning": "The student answer correctly identifies that the timekeeping table is placed outside and at the centre of the pitch on the same side as and between the team benches, which matches the ground truth answer.",
+      "ragas": {
+        "faithfulness": 0.7857142857142857,
+        "answer_relevancy": 0.820051193807068,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In indoor field hockey, under what two specific circumstances is a penalty stroke awarded to the attacking team?",
+      "ground_truth": "A penalty stroke is awarded: a) for an offence by a defender in the circle which prevents the probable scoring of a goal; b) for an intentional offence in the circle by a defender against an opponent who has possession of the ball.",
+      "bot_answer": "**Direct Answer:**\nA penalty stroke is awarded to the attacking team when a defender commits an offence in the circle that prevents the probable scoring of a goal, or for an intentional offence in the circle by a defender against an opponent who has possession of the ball.\n\n**Key Rules:**\n- **Rule 12.4** (*fih-rules-of-indoor-hockey-2023.pdf*): A penalty stroke is awarded for an offence by a defender in the circle which prevents the probable scoring of a goal.\n- **Rule 12.4** (*fih-rules-of-indoor-hockey-2023.pdf*): A penalty stroke is awarded for an intentional offence in the circle by a defender against an opponent who has possession of the ball.\n\n**Reasoning:**\nThe user asks about the exact circumstances under which a penalty stroke is awarded according to the FIH rules of indoor hockey. To answer this, we need to identify the specific conditions for awarding a penalty stroke for offences committed by a defender in the circle. Reviewing the rules regarding penalty strokes in *fih-rules-of-indoor-hockey-2023.pdf*, **Rule 12.4** explicitly outlines these two specific conditions.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 12.4",
+      "reasoning": "The student correctly identified both specific circumstances required for awarding a penalty stroke: an offence by a defender in the circle preventing the probable scoring of a goal, and an intentional offence in the circle by a defender against an opponent with possession of the ball.",
+      "ragas": {
+        "faithfulness": 0.5714285714285714,
+        "answer_relevancy": 0.8972710535787871,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In outdoor field hockey, what color are the mandatory lines and markings for pitches on which Senior international hockey will be played, and what is a common alternative color for lines when hockey is not the priority sport?",
+      "ground_truth": "White lines and markings are mandatory for Senior international hockey pitches, and yellow is a common alternative color when hockey is not the priority sport.",
+      "bot_answer": "**Direct Answer:**\nFor pitches on which Senior international hockey matches are played, the mandatory lines and markings must be white. When hockey is not the priority sport on multi-sport pitches, the lines are often yellow.\n\n**Key Rules:**\n- All marks must be made in white, and white lines and markings are mandatory for pitches on which Senior international hockey will be played (*fih-rules-of-hockey-2026-final.pdf*, p. 57).\n- Where hockey is not the priority sport, lines are often yellow, and yellow marks provide greater visibility on white sand-filled pitches (*fih-rules-of-hockey-2026-final.pdf*, p. 57).\n\n**Reasoning:**\nThe user asks about the mandatory and alternative colors for field lines and markings according to international rules. To answer this question, the specifications for field markings detailed in *fih-rules-of-hockey-2026-final.pdf* were reviewed:\n1. Checking the color requirement for Senior international hockey pitches, the text specifies that all marks must be made in white, making white lines and markings mandatory for these pitches.\n2. Checking alternative colors for multi-sport pitches where hockey is not the priority sport, the text notes that lines are often yellow, which also serves to provide greater visibility on white sand-filled pitches.",
+      "score": 1,
+      "retrieval_hit": false,
+      "citation_hit": false,
+      "context_guidance": "Derived from 1.2",
+      "reasoning": "The student correctly identified that white is the mandatory color for Senior international hockey pitches and yellow is the common alternative color when hockey is not the priority sport, perfectly matching the ground truth.",
+      "ragas": {
+        "faithfulness": 0.8,
+        "answer_relevancy": 0.8789058388267214,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In outdoor field hockey, according to the rules, what constitutes the playing side of the stick?",
+      "ground_truth": "The playing side of the stick is the entire side shown in figures 3 and 4 and the edges of that side.",
+      "bot_answer": "**Direct Answer**\nThe playing side of the stick consists of the entire flat playing side of the head, any continuation of it along the handle, and the edges of that side, while the back and edges must remain rounded.\n\n**Key Rules**\n- **Rule 4.6**: The stick has a traditional shape with a handle and a curved head which is flat on its left side, must be smooth, and must be able to pass through a ring with an interior diameter of 51 mm.\n- **Rule 9.5**: Players must not play the ball with the back of the stick.\n\n**Reasoning**\nThe user asks about what constitutes the playing side of the stick in outdoor field hockey. To answer this, we look at the stick's structure and playing surfaces as outlined in *fih-rules-of-hockey-2026-final.pdf*. The rules state that the flat playing side of the head and its edges define the legal playing area, while the back and edges must remain rounded. Specifically, the head must be flat only on the left-hand side (the side to the player's left when the stick is held with the open end of the head pointing directly away from the player's front).",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": false,
+      "context_guidance": "Derived from 2.6",
+      "reasoning": "The student answer correctly identifies the playing side of the stick as the entire flat playing side (matching the ground truth's reference to the side shown in the figures) and the edges of that side.",
+      "ragas": {
+        "faithfulness": 0.7857142857142857,
+        "answer_relevancy": 0.9856840917474818,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In outdoor field hockey, what conditions must be met for the application of tapes and resins to a stick?",
+      "ground_truth": "The tapes and resins must not be hazardous and the stick must conform to the specifications.",
+      "bot_answer": "**Direct Answer**\nThe application of tapes and resins on a hockey stick is permitted, provided they are not hazardous and the stick conforms to the overall specifications.\n\n**Key Rules**\n- **Rule 2.22** (*fih-rules-of-hockey-2026-final.pdf*): The application of tapes and resins is permitted provided that they are not hazardous and that the stick conforms to the specifications.\n\n**Reasoning**\nThe user asks about the conditions for applying tapes and resins to a hockey stick. To determine this, the rules regarding stick properties and additional coverings were evaluated. According to *fih-rules-of-hockey-2026-final.pdf*, tapes and resins are allowed on the stick as long as they do not pose any safety risks or hazards, and the final assembly continues to meet all required stick specifications (such as dimensions, smoothness, and material restrictions).",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 2.22",
+      "reasoning": "The student correctly identified both conditions required by the ground truth: the tapes and resins must not be hazardous, and the stick must conform to the specifications.",
+      "ragas": {
+        "faithfulness": 0.5555555555555556,
+        "answer_relevancy": 0.754257667505683,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In outdoor field hockey, what areas are marked inside the field around the goals and opposite the centres of the back-lines?",
+      "ground_truth": "Circles",
+      "bot_answer": "**Direct Answer:**\nThe areas marked inside the field around the goals and opposite the centres of the back-lines are referred to as the **circles**.\n\n**Key Rules:**\n- **Rule 1.6**: Specifies that areas referred to as the circles are marked inside the field around the goals and opposite the centres of the back-lines (as detailed in *fih-rules-of-hockey-2026-final.pdf*).\n- **Terminology**: The circle is defined as the area enclosed by and including the two quarter circles and the lines joining them at each end of the field opposite the centre of the back-lines.\n\n**Reasoning:**\nThe user asks to identify the specific area on the field of play that is marked around the goals and opposite the centres of the back-lines based on the provided terminology and rules. Reviewing the text in *fih-rules-of-hockey-2026-final.pdf* reveals definitions and rule descriptions for the areas in front of the goals, specifically confirming that these marked spaces are the circles.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 1.6",
+      "reasoning": "The student correctly identified 'circles' as the ground truth answer, providing the necessary key fact right at the beginning of the response.",
+      "ragas": {
+        "faithfulness": 0.5,
+        "answer_relevancy": 0.9445181074203561,
+        "context_precision": 0.9999999999666667,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In outdoor field hockey, what is the maximum permissible weight, in grams, of a stick, and what is the maximum length of the stick as measured from the top of the handle to the bottom of the head?",
+      "ground_truth": "The maximum weight is 737 grams, and the maximum length is 105 cm.",
+      "bot_answer": "**Direct Answer**\n- The total weight of a field hockey stick must not exceed 737 grams.\n- The maximum length of the stick, measured from the top of the handle to the bottom of the head, must not be more than 105 cm.\n\n**Key Rules**\n- **Stick Weight Limit**: The total weight of the stick must not exceed 737 grams (*fih-rules-of-hockey-2026-final.pdf*, p. 68).\n- **Stick Length Limit**: The length of the stick measured from the top of the handle to the bottom of the head shall not be more than 105 cm (*fih-rules-of-hockey-2026-final.pdf*, p. 68).\n\n**Reasoning**\nThe user asks for two static facts regarding an outdoor field hockey stick based on the international rules context: the maximum permissible weight in grams and the maximum length measured from the top of the handle to the bottom of the head. By checking the specifications detailed in *fih-rules-of-hockey-2026-final.pdf*, it is established that the total weight of the stick must not exceed 737 grams, and its length must not exceed 105 cm.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": false,
+      "context_guidance": "Derived from 2.18",
+      "reasoning": "The student correctly identified both the maximum weight (737 grams) and the maximum length (105 cm) of the field hockey stick, matching the ground truth answer.",
+      "ragas": {
+        "faithfulness": 0.75,
+        "answer_relevancy": 0.9223466778066355,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In outdoor field hockey, what is marked across the middle of the field?",
+      "ground_truth": "A centre-line",
+      "bot_answer": "**Direct Answer**\nA centre-line is marked across the middle of the field.\n\n**Key Rules**\n- A centre-line is marked across the middle of the field (**Rule 1.4**, *fih-rules-of-hockey-2026-final.pdf*)\n- The centre-line goes across the middle of the field (page 58, *fih-rules-of-hockey-2026-final.pdf*)\n\n**Reasoning**\nThe user asks about what is marked across the middle of the field. To answer this question about field components related to lines across the middle, we identify the specific markings outlined in the regulations. The rules explicitly state and specify specifications for a centre-line marked across the middle of the field.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 1.4",
+      "reasoning": "The student correctly identified that a centre-line is marked across the middle of the field, matching the ground truth answer.",
+      "ragas": {
+        "faithfulness": 0.3333333333333333,
+        "answer_relevancy": 0.9127576618431625,
+        "context_precision": 0.99999999995,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In an outdoor field hockey match, what is the maximum number of players from each team allowed on the field simultaneously?",
+      "ground_truth": "Eleven",
+      "bot_answer": "**Direct Answer:**\nA maximum of eleven players from each team are allowed on the field at the same time during a match.\n\n**Key Rules:**\n- **Rule 2.1** (*fih-rules-of-hockey-2026-final.pdf*): A maximum of eleven players from each team take part in play at any particular time during the match, and time should be stopped to correct the situation if a team exceeds this limit.\n- **Rule 9.1** (*fih-rules-of-hockey-2026-final.pdf*): A match is played between two teams with not more than eleven players of each team on the field at the same time.\n\n**Reasoning:**\nThe user asks about the maximum number of players allowed on the field simultaneously. To answer this question regarding team composition on the field of play, we look to the official rules governing player numbers. Both **Rule 2.1** and **Rule 9.1** explicitly specify that each team is restricted to a maximum of eleven players taking part in play at any particular time during a match.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 9.1",
+      "reasoning": "The student correctly identified 'eleven' as the maximum number of players allowed on the field from each team.",
+      "ragas": {
+        "faithfulness": 0.7142857142857143,
+        "answer_relevancy": 0.8084393742579246,
+        "context_precision": 0.8666666666377778,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In outdoor field hockey, what is the consequence if an attacker enters the circle before permitted during a penalty corner, and the player taking the push or hit from the backline fails to go beyond the centre-line?",
+      "ground_truth": "The penalty corner is taken again.",
+      "bot_answer": "**Direct Answer**\nIf an attacker enters the circle before permitted during a penalty corner, the player taking the push or hit from the back-line is required to go beyond the centre-line, and the penalty corner is taken again. Attackers sent beyond the centre-line may not return for re-taken penalty corners, but they are permitted to return for a subsequently awarded penalty corner.\n\n**Key Rules**\n- **Rule 13.6**: If an attacker enters the circle before permitted, the player taking the push or hit from the back-line is required to go beyond the centre-line, and the penalty corner is taken again.\n- **Rule 13.6**: Attackers who are sent beyond the centre-line may not return for re-taken penalty corners, but may do so for a subsequently awarded penalty corner.\n\n**Reasoning**\nThe user asks about the consequences when an attacker enters the circle prematurely during a penalty corner. To determine the correct consequence, we must examine the rules governing offences committed during the taking of a penalty corner (*fih-Rules-of-hockey-2026-final.pdf*). Specifically, when an attacker enters the circle before permitted, the rule explicitly outlines the required procedure and penalty, mandating that the penalty corner be re-taken and the taker be sent beyond the centre-line without being allowed back for re-takes.",
+      "score": 1,
+      "retrieval_hit": false,
+      "citation_hit": true,
+      "context_guidance": "Derived from 13.6",
+      "reasoning": "The student correctly identified that the penalty corner is taken again, which matches the ground truth answer.",
+      "ragas": {
+        "faithfulness": 0.8461538461538461,
+        "answer_relevancy": 0.9197662971562317,
+        "context_precision": 0.6666666666333333,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In indoor field hockey, according to the Rules, what is awarded when a player or team is disadvantaged by an opponent breaking the Rules?",
+      "ground_truth": "a penalty",
+      "bot_answer": "**Direct Answer**\nA penalty is awarded when a player or team has been disadvantaged by an opponent breaking the Rules.\n\n**Key Rules**\n- **Rule 12.1**: A penalty is awarded when a player or team has been disadvantaged by an opponent breaking the Rules (*fih-rules-of-indoor-hockey-2023.pdf*).\n\n**Reasoning**\nThe user asks about what is awarded when a player or team experiences a disadvantage due to an opponent breaking the rules. To determine what is awarded when a player or team is disadvantaged by an opponent breaking the rules, we look at the rule governing advantage and penalties. As outlined in the regulations, a penalty is awarded under these specific circumstances to ensure fair play and maintain control of the match.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 12.1",
+      "reasoning": "The student answer correctly identifies that 'a penalty' is awarded when a player or team is disadvantaged by an opponent breaking the rules, matching the ground truth.",
+      "ragas": {
+        "faithfulness": 0.75,
+        "answer_relevancy": 0.8380922458423459,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "According to the rules, what action are players prohibited from performing with the ball in indoor hockey?",
+      "ground_truth": "Players must not hit the ball.",
+      "bot_answer": "**Direct Answer:**\nPlayers are prohibited from performing certain actions with the ball, such as playing it with the back of the stick, playing it above shoulder height (with exceptions for defenders saving a shot), playing it dangerously, or trapping and holding it against the side-boards.\n\n**Key Rules:**\n- **Rule 9.6**: Players must not play the ball with the back of the stick (*fih-rules-of-indoor-hockey-2023.pdf*).\n- **Rule 9.7**: Players must not play the ball with any part of the stick when the ball is above shoulder height, except that defenders are permitted to use the stick to stop or deflect a shot at goal at any height (*fih-rules-of-indoor-hockey-2023.pdf*).\n- **Rule 9.8**: Players must not play the ball dangerously or in a way which leads to dangerous play, which includes playing the ball deliberately and hard into an opponent's stick, feet, or hands with an associated risk of injury when the opponent is in a 'set' or stationary position, or collecting, turning, and trying to play the ball deliberately through a defending player who is close or trying to play it (*fih-rules-of-indoor-hockey-2023.pdf*).\n- **Rule 9.19**: Players must not trap or hold the ball against the side-boards, nor deliberately aim to trap the ball between their own and an opponent's stick (*fih-rules-of-indoor-hockey-2023.pdf*).\n\n**Reasoning:**\nThe user asks about what actions players are prohibited from performing with the ball. To answer this, we search the rules for restrictions on ball handling, playing, trapping, and danger as outlined in the conduct of play for players.",
+      "score": 0,
+      "retrieval_hit": false,
+      "citation_hit": false,
+      "context_guidance": "Derived from 9.5",
+      "reasoning": "The ground truth specifies that players must not hit the ball. The student answer lists various prohibitions (playing with the back of the stick, above shoulder height, etc.) but fails to mention the fundamental prohibition of hitting the ball, which is the core of indoor hockey rules (where pushing/push-passing is required instead of hitting).",
+      "ragas": {
+        "faithfulness": 0.5714285714285714,
+        "answer_relevancy": 0.9856407410939501,
+        "context_precision": 0.0,
+        "context_recall": 0.0
+      }
+    },
+    {
+      "question": "In indoor hockey, what specific situations at the end of each quarter and full-time necessitate prolonging the match?",
+      "ground_truth": "The match is prolonged to allow completion of a penalty corner or any subsequent penalty corner or penalty stroke.",
+      "bot_answer": "**Direct Answer**\nThe match is prolonged at the end of each quarter and full-time to allow the completion of a penalty corner or any subsequent penalty corner or penalty stroke.\n\n**Key Rules**\n- **Rule 13.4**: The match is prolonged at the end of each quarter and full-time to allow the completion of a penalty corner or any subsequent penalty corner or penalty stroke (as outlined in *fih-rules-of-indoor-hockey-2023.pdf*).\n- **Rule 11.5**: Umpires are responsible for indicating the end of time and ensuring the completion of a penalty corner if a quarter is prolonged (as outlined in *fih-rules-of-indoor-hockey-2023.pdf*).\n\n**Reasoning**\nThe user asks about the rules governing the end of periods and matches regarding penalty corners and strokes. To answer this question, I checked the rules governing the end of periods and matches. Specifically, **Rule 13.4** states that the match is prolonged at the end of each quarter and full-time to allow the completion of a penalty corner or any subsequent penalty corner or penalty stroke. Additionally, **Rule 11.5** notes that umpires are responsible for indicating the end of time and ensuring the completion of a penalty corner if a quarter is prolonged.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 13.4",
+      "reasoning": "The student's answer accurately identifies that the match is prolonged to allow the completion of a penalty corner, any subsequent penalty corner, or a penalty stroke, which matches the ground truth.",
+      "ragas": {
+        "faithfulness": 0.6,
+        "answer_relevancy": 0.8272962217872986,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In indoor hockey, a goalkeeper wearing full protective equipment is permitted to use their arms, hands, and any other part of their body to push the ball away under what specific circumstances, according to the provided text?",
+      "ground_truth": "The action is permitted only as part of a goal-saving action or to move the ball away from the possibility of a goal-scoring action by opponents. It does not permit a goalkeeper to propel the ball forcefully with arms, hands, or body so that it travels a long distance.",
+      "bot_answer": "**Direct Answer:**\nA goalkeeper wearing full protective equipment is permitted to use their arms, hands, and any other part of their body to push the ball away, provided it is part of a goal-saving action or to move the ball away from a potential goal-scoring action by opponents. However, they are not allowed to forcefully propel the ball over a long distance using their arms, hands, or body.\n\n**Key Rules:**\n- **Rule 10.2** (*fih-rules-of-indoor-hockey-2023.pdf*): Goalkeepers wearing full protective equipment are permitted to use their arms, hands, and any other part of their body to push the ball away, but only as part of a goal-saving action or to prevent an opponent's goal-scoring action.\n- **Rule 10.2** (*fih-rules-of-indoor-hockey-2023.pdf*): Goalkeepers are not permitted to propel the ball forcefully with their arms, hands, or body so that it travels a long distance.\n\n**Reasoning:**\nThe user asks about the specific conditions and limitations under which a goalkeeper wearing full protective equipment is permitted to use their arms, hands, and body to play the ball. To answer this question, we look at **Rule 10.2** from *fih-rules-of-indoor-hockey-2023.pdf*, which dictates how goalkeepers conduct themselves when the ball is inside the circle they are defending. While goalkeepers are granted privileges to use various parts of their body\u2014such as arms and hands\u2014to push the ball away, the rules explicitly restrict this usage. It is strictly limited to defensive scenarios like saving a goal or neutralizing an immediate scoring threat. Furthermore, to prevent unfair play or excessive clearance using the upper body, the rule clarifies that a goalkeeper cannot use their arms, hands, or body to forcefully propel the ball over a long distance.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 10.2",
+      "reasoning": "The student answer accurately captures all the key facts from the ground truth: it specifies that the action is permitted only as part of a goal-saving action or to move the ball away from a goal-scoring action, and correctly notes the restriction against forcefully propelling the ball a long distance using the arms, hands, or body.",
+      "ragas": {
+        "faithfulness": 0.7272727272727273,
+        "answer_relevancy": 0.8925852637428563,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In indoor hockey, where must a temporarily suspended player remain until the umpire allows them to resume play?",
+      "ground_truth": "In a designated place.",
+      "bot_answer": "**Direct Answer:**\nA temporarily suspended player must remain in a designated place until the umpire who suspended them permits them to resume play (**Rule 14.2**, *fih-rules-of-indoor-hockey-2023.pdf*).\n\n**Key Rules:**\n- **Rule 14.2**: Temporarily suspended players must remain in a designated place until permitted by the umpire who suspended them to resume play.\n\n**Reasoning:**\nThe user asks about where temporarily suspended players must remain until permitted to resume play. To answer the question, the actor (\"temporarily suspended players\") and the action/requirement (\"where must they remain until permitted to resume play\") were identified. Searching the context for rules regarding personal penalties and temporary suspensions reveals the specific instruction that suspended players must stay in a designated place until the suspending umpire gives them permission to return.",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 14.2",
+      "reasoning": "The student answer correctly identifies that a temporarily suspended player must remain in a designated place, which matches the ground truth.",
+      "ragas": {
+        "faithfulness": 0.6,
+        "answer_relevancy": 0.8430253454515438,
+        "context_precision": 0.99999999995,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "question": "In indoor field hockey, what is the maximum permissible weight of a stick, and what is the maximum length of the stick as measured from the top of the handle to the bottom of the head?",
+      "ground_truth": "The maximum weight is 737 grams, and the maximum length is 105 cm.",
+      "bot_answer": "- **Direct Answer**: In indoor field hockey, the stick must comply with strict weight and length limits:\n  - The total weight of the stick must not exceed 737 grams (*fih-rules-of-indoor-hockey-2023.pdf*, p. 63).\n  - The length of the stick, measured from the top of the handle to the bottom of the head, must not be more than 105 cm (*fih-rules-of-indoor-hockey-2023.pdf*, p. 63).\n\n- **Key Rules**:\n  - **Rule 2.18** (from *fih-rules-of-indoor-hockey-2023.pdf*, p. 63): States that the total weight of the stick must not exceed 737 grams, and the length of the stick measured from the top of the handle to the bottom of the head shall not be more than 105 cm.\n\n- **Reasoning**: The user asks for static stick specifications regarding the maximum permissible weight and the maximum length of a stick in indoor field hockey. Looking through the pitch and equipment specifications in *fih-rules-of-indoor-hockey-2023.pdf*, the specific rule governing the weight and length limits for a stick establishes that the weight limit must not exceed 737 grams and the length limit must not be more than 105 cm (*fih-rules-of-indoor-hockey-2023.pdf*, p. 63).",
+      "score": 1,
+      "retrieval_hit": true,
+      "citation_hit": true,
+      "context_guidance": "Derived from 2.18",
+      "reasoning": "The student correctly identified both the maximum weight (737 grams) and the maximum length (105 cm) as stated in the ground truth.",
+      "ragas": {
+        "faithfulness": 0.0,
+        "answer_relevancy": 0.9721348342727151,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    }
+  ]
+}
