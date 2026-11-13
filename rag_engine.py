@@ -16,6 +16,9 @@ import prompts
 
 logger = get_logger(__name__)
 
+# Metadata values the loaders use when a chunk has no real rule/chapter/section
+METADATA_PLACEHOLDERS = ("", "n/a", "general", "front matter", "unknown", "no number")
+
 class FIHRulesEngine:
     """High-level interface to embeddings, LLM, and vector DB."""
 
@@ -225,7 +228,7 @@ class FIHRulesEngine:
             context_text=context_text,
             standalone_query=standalone_query
         )
-        logger.info(f"Full Prompt: {full_prompt}")
+        logger.debug(f"Full Prompt: {full_prompt}")
         answer = self.llm.invoke(full_prompt)
         logger.info(f"Received AI response ({len(answer)} chars)")
 
@@ -258,7 +261,7 @@ class FIHRulesEngine:
             for i, doc in enumerate(docs):
                 records.append(discoveryengine.RankingRecord(
                     id=str(i),
-                    title=doc.metadata.get("rule", ""),
+                    title=self._rerank_title(doc.metadata),
                     content=doc.page_content
                 ))
             
@@ -324,6 +327,19 @@ class FIHRulesEngine:
         }
 
     @staticmethod
+    def _rerank_title(metadata):
+        """Build a reranker title from rule, chapter and section, skipping placeholders."""
+        parts = []
+        for key in ("rule", "chapter", "section"):
+            value = str(metadata.get(key) or "").strip()
+            if value.lower() in METADATA_PLACEHOLDERS:
+                continue
+            if key == "rule" and value[0].isdigit():
+                value = f"Rule {value}"
+            parts.append(value)
+        return " | ".join(parts)
+
+    @staticmethod
     def _extract_json(raw):
         """Return the first JSON object in an LLM response (tolerates fences and prose), or {}."""
         import json
@@ -351,7 +367,7 @@ class FIHRulesEngine:
                 continue
             rule = str(item.get("rule", "")).strip()
             # Loader placeholders are not real rule numbers
-            if rule.lower() in ("", "n/a", "general", "front matter", "unknown", "no number"):
+            if rule.lower() in METADATA_PLACEHOLDERS:
                 rule = ""
             elif rule[0].isdigit():
                 rule = f"Rule {rule}"

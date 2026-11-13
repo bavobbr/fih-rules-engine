@@ -30,3 +30,4 @@ debug_output/
 # Agent / IDE
 .agent/
 .gemini/
+.superpowers/

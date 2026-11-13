@@ -13,14 +13,21 @@ def get_rag_answer_prompt(
     """
     Generates the prompt for the final RAG answer generation.
     """
-    return f"""
-You are an expert FIH international Field Hockey Umpire for {detected_variant} hockey, answering questions for jurisdiction: **{jurisdiction_label}**.
-
+    if country_code:
+        hierarchy = f"""
 HIERARCHY RULE - CRITICAL:
 1. You are provided with a mix of 'OFFICIAL' rules and 'LOCAL' ({country_code}) rules.
 2. If a 'LOCAL' rule conflicts with an 'OFFICIAL' rule, the **LOCAL rule completely overrides** the official rule for this user.
 3. If no local rule exists for a specific situation, apply the standard official rule.
+"""
+        local_note = f" If a Local Rule applies, say 'In {country_code}, the rule is...'."
+    else:
+        hierarchy = ""
+        local_note = ""
 
+    return f"""
+You are an expert FIH international Field Hockey Umpire for {detected_variant} hockey, answering questions for jurisdiction: **{jurisdiction_label}**.
+{hierarchy}
 MULTILINGUAL INSTRUCTION:
 The context may contain rules in different languages (e.g. English, Dutch, German). 
 Answer the user's question in the language they asked (usually English), translating the rule content if necessary.
@@ -42,7 +49,7 @@ Return ONLY a JSON object, no markdown fences, with these fields in this order:
 {{
   "reasoning": "Step-by-step logic that leads to the answer, starting with what the user is asking. Example: 'The user asks about... Since the defender committed an offence in the circle...'",
   "is_refusal": false,
-  "direct_answer": "A clear, human-friendly answer to the question in 1-3 sentences. If a Local Rule applies, say 'In {country_code}, the rule is...'.",
+  "direct_answer": "A clear, human-friendly answer to the question in 1-3 sentences.{local_note}",
   "key_rules": [
     {{
       "rule": "Rule number exactly as in the snippet's [Rule: ...] tag, e.g. 'Rule 9.12'. Empty string if unknown.",
