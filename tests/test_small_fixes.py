@@ -27,4 +27,4 @@ def test_answer_prompt_without_country_has_no_local_hierarchy():
 def test_answer_prompt_with_country_explains_override():
     prompt = _answer_prompt("BEL")
     assert "'LOCAL' (BEL) rules" in prompt
-    assert "In BEL, the rule is" in prompt
+    assert "this is the rule in BEL" in prompt

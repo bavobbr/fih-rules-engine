@@ -30,3 +30,15 @@ def test_health_503_when_engine_failed_to_start():
     assert response.status_code == 503
     assert response.json() == {"detail": "Engine not ready"}
     api.engine = None
+
+
+def test_chat_returns_language(client, mock_engine_class):  # noqa: F811
+    mock_engine_class.query.return_value = {
+        "answer": "**Antwoord**\nTwee minuten.", "standalone_query": "Q", "variant": "outdoor",
+        "language": "nl", "source_docs": []}
+
+    response = client.post("/chat", json={"query": "Hoe lang duurt een groene kaart?"},
+                           headers={"x-api-key": api.API_KEY})
+
+    assert response.status_code == 200
+    assert response.json()["language"] == "nl"

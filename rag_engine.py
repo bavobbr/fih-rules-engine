@@ -19,6 +19,22 @@ logger = get_logger(__name__)
 # Metadata values the loaders use when a chunk has no real rule/chapter/section
 METADATA_PLACEHOLDERS = ("", "n/a", "general", "front matter", "unknown", "no number")
 
+# Fixed answer texts per language (ISO 639-1); other languages fall back to English
+ANSWER_LABELS = {
+    "en": {"direct": "Direct Answer", "rules": "Key Rules", "reasoning": "Reasoning", "local": "local rule",
+           "not_found": "I checked the **{variant}** rules but couldn't find an answer."},
+    "nl": {"direct": "Antwoord", "rules": "Belangrijkste regels", "reasoning": "Redenering", "local": "lokale regel",
+           "not_found": "Ik heb de **{variant}**-regels nagekeken, maar vond geen antwoord."},
+    "fr": {"direct": "Réponse", "rules": "Règles clés", "reasoning": "Raisonnement", "local": "règle locale",
+           "not_found": "J'ai consulté les règles **{variant}**, mais je n'ai pas trouvé de réponse."},
+}
+
+# Language names the planner may return instead of an ISO code
+LANGUAGE_ALIASES = {
+    "english": "en", "dutch": "nl", "nederlands": "nl", "flemish": "nl", "vlaams": "nl",
+    "french": "fr", "français": "fr", "francais": "fr", "german": "de", "deutsch": "de",
+}
+
 class FIHRulesEngine:
     """High-level interface to embeddings, LLM, and vector DB."""
 
@@ -151,9 +167,11 @@ class FIHRulesEngine:
         plan = self._plan_query(history, user_input, country_code=country_code)
         standalone_query = plan["standalone_query"]
         detected_variant = plan["variant"]
+        language = plan.get("language", "en")
+        labels = ANSWER_LABELS.get(language, ANSWER_LABELS["en"])
         # Keywords are OR-ed: websearch_to_tsquery ANDs plain words, which rarely matches a whole question
         keyword_text = " or ".join(plan["keywords"]) or standalone_query
-        logger.info(f"Query plan: variant={detected_variant}, standalone='{standalone_query}', keywords='{keyword_text}'")
+        logger.info(f"Query plan: variant={detected_variant}, language={language}, standalone='{standalone_query}', keywords='{keyword_text}'")
 
         # Embed query
         query_vector = self.embeddings.embed_query(standalone_query)
@@ -219,9 +237,10 @@ class FIHRulesEngine:
         
         if not context_text:
             return {
-                "answer": f"I checked the **{detected_variant}** rules but couldn't find an answer.",
+                "answer": labels["not_found"].format(variant=detected_variant),
                 "standalone_query": standalone_query,
                 "variant": detected_variant,
+                "language": language,
                 "source_docs": []
             }
 
@@ -232,7 +251,8 @@ class FIHRulesEngine:
             jurisdiction_label=jurisdiction_label,
             country_code=country_code,
             context_text=context_text,
-            standalone_query=standalone_query
+            standalone_query=standalone_query,
+            language=language
         )
         logger.debug(f"Full Prompt: {full_prompt}")
         answer = self.llm.invoke(full_prompt)
@@ -241,7 +261,7 @@ class FIHRulesEngine:
         # Render structured answer; fall back to the raw text if the model did not return JSON
         answer_data = self._extract_json(answer)
         if answer_data.get("direct_answer"):
-            final_answer = self._render_answer(answer_data)
+            final_answer = self._render_answer(answer_data, language=language)
         else:
             logger.warning("Answer was not valid JSON, returning raw response.")
             final_answer = answer
@@ -251,6 +271,7 @@ class FIHRulesEngine:
             "original_answer": answer,
             "standalone_query": standalone_query,
             "variant": detected_variant,
+            "language": language,
             "source_docs": docs
         }
 
@@ -318,10 +339,16 @@ class FIHRulesEngine:
                     return variant
             return "outdoor"
 
+        def to_language(value):
+            value = str(value or "").strip().lower()
+            if value in LANGUAGE_ALIASES:
+                return LANGUAGE_ALIASES[value]
+            return value if len(value) == 2 and value.isalpha() else "en"
+
         data = FIHRulesEngine._extract_json(raw)
         if not data:
             logger.warning(f"Could not parse query plan, using original query. Raw output: {raw!r}")
-            return {"variant": to_variant(raw), "standalone_query": original_query, "keywords": []}
+            return {"variant": to_variant(raw), "standalone_query": original_query, "keywords": [], "language": "en"}
 
         keywords = data.get("keywords") or []
         if not isinstance(keywords, list):
@@ -330,6 +357,7 @@ class FIHRulesEngine:
             "variant": to_variant(data.get("variant", "outdoor")),
             "standalone_query": str(data.get("standalone_query") or original_query).strip(),
             "keywords": [str(k).strip() for k in keywords if str(k).strip()],
+            "language": to_language(data.get("language")),
         }
 
     @staticmethod
@@ -359,13 +387,14 @@ class FIHRulesEngine:
         return data if isinstance(data, dict) else {}
 
     @staticmethod
-    def _render_answer(data):
-        """Render the structured answer as markdown: Direct Answer > Key Rules > Reasoning."""
+    def _render_answer(data, language="en"):
+        """Render the structured answer as markdown: Direct Answer > Key Rules > Reasoning (labels in `language`)."""
+        labels = ANSWER_LABELS.get(language, ANSWER_LABELS["en"])
         direct_answer = str(data.get("direct_answer", "")).strip()
         if data.get("is_refusal"):
             return direct_answer
 
-        sections = [f"**Direct Answer**\n{direct_answer}"]
+        sections = [f"**{labels['direct']}**\n{direct_answer}"]
 
         bullets = []
         for item in data.get("key_rules") or []:
@@ -389,14 +418,14 @@ class FIHRulesEngine:
             if citation:
                 bullet += f" *({citation})*"
             if item.get("is_local"):
-                bullet += " (local rule)"
+                bullet += f" ({labels['local']})"
             bullets.append(f"- {bullet}")
 
         if bullets:
-            sections.append("**Key Rules**\n" + "\n".join(bullets))
+            sections.append(f"**{labels['rules']}**\n" + "\n".join(bullets))
 
         reasoning = str(data.get("reasoning", "")).strip()
         if reasoning:
-            sections.append(f"**Reasoning**\n{reasoning}")
+            sections.append(f"**{labels['reasoning']}**\n{reasoning}")
 
         return "\n\n".join(sections)

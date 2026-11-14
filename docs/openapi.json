@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FIH Rules API",
-    "description": "\nAsk questions about the field hockey rules and get an answer grounded in the official FIH rulebooks\n(Outdoor, Indoor, Hockey5s), optionally combined with a country's national rules.\n\n## Authentication\n`POST /chat` and `GET /evals/latest` require the header `x-api-key: <key>`. A missing header returns\n`422`, a wrong key `403`. The other endpoints are public.\n\n## Typical client flow\n1. `GET /jurisdictions` once, to fill a country picker. Offer \"International\" (no country) as the default.\n2. `POST /chat` per user message. Send the earlier turns in `history` and the picked country code in `country`.\n3. Render `answer` as **Markdown**. Optionally show `source_docs` as expandable sources.\n\n## Answer format\n`answer` is Markdown with three labelled sections, each label on its own line:\n\n```\n**Direct Answer**\nA green card suspension lasts 2 minutes of playing time.\n\n**Key Rules**\n- **Rule 14.1**: A green card is a warning with a 2-minute suspension. *(fih-rules-of-hockey-2026-final.pdf, p. 45)*\n\n**Reasoning**\nThe user asks for the duration of a green card suspension. ...\n```\n\n- **Key Rules** bullets start with a bold rule number when known, end with an italic *(file, p. page)* citation,\n  and end with `(local rule)` when the rule comes from the selected country's national rules.\n  The section is left out when no specific rule applies.\n- Off-topic questions, greetings and questions the rules do not cover return **one plain sentence**\n  without any section labels.\n- The answer is written in the language of the question.\n\n## Hockey variant\nThe variant (outdoor, indoor or hockey5s) is detected from the question and the history; there is no request\nfield for it. Mention the variant in the question (\"In indoor hockey, ...\") to steer it. The detected variant is\nreturned in `variant`.\n\n## Timing and errors\n- A typical answer takes 3-6 seconds. After a period without traffic, the first request can take up to\n  ~30 seconds extra (Cloud Run cold start). Use a client timeout of at least 60 seconds.\n- `503` means the engine is still starting: retry after a few seconds. `500` is an internal error: show a\n  generic \"try again\" message. Both return `{\"detail\": \"...\"}`.\n",
-    "version": "1.1.0"
+    "description": "\nAsk questions about the field hockey rules and get an answer grounded in the official FIH rulebooks\n(Outdoor, Indoor, Hockey5s), optionally combined with a country's national rules.\n\n## Authentication\n`POST /chat` and `GET /evals/latest` require the header `x-api-key: <key>`. A missing header returns\n`422`, a wrong key `403`. The other endpoints are public.\n\n## Typical client flow\n1. `GET /jurisdictions` once, to fill a country picker. Offer \"International\" (no country) as the default.\n2. `POST /chat` per user message. Send the earlier turns in `history` and the picked country code in `country`.\n3. Render `answer` as **Markdown**. Optionally show `source_docs` as expandable sources.\n\n## Answer format\n`answer` is Markdown with three labelled sections, each label on its own line:\n\n```\n**Direct Answer**\nA green card suspension lasts 2 minutes of playing time.\n\n**Key Rules**\n- **Rule 14.1**: A green card is a warning with a 2-minute suspension. *(fih-rules-of-hockey-2026-final.pdf, p. 45)*\n\n**Reasoning**\nThe user asks for the duration of a green card suspension. ...\n```\n\n- **Key Rules** bullets start with a bold rule number when known, end with an italic *(file, p. page)* citation,\n  and end with `(local rule)` when the rule comes from the selected country's national rules.\n  The section is left out when no specific rule applies.\n- Off-topic questions, greetings and questions the rules do not cover return **one plain sentence**\n  without any section labels.\n- The answer is written in the language of the question, and so are the section labels for Dutch and French:\n\n| `language` | Labels | Local rule marker |\n|---|---|---|\n| `en` (and any other language) | Direct Answer / Key Rules / Reasoning | (local rule) |\n| `nl` | Antwoord / Belangrijkste regels / Redenering | (lokale regel) |\n| `fr` | Réponse / Règles clés / Raisonnement | (règle locale) |\n\n  The detected language is returned in `language`.\n\n## Hockey variant\nThe variant (outdoor, indoor or hockey5s) is detected from the question and the history; there is no request\nfield for it. Mention the variant in the question (\"In indoor hockey, ...\") to steer it. The detected variant is\nreturned in `variant`.\n\n## Timing and errors\n- A typical answer takes 3-6 seconds. After a period without traffic, the first request can take up to\n  ~30 seconds extra (Cloud Run cold start). Use a client timeout of at least 60 seconds.\n- `503` means the engine is still starting: retry after a few seconds. `500` is an internal error: show a\n  generic \"try again\" message. Both return `{\"detail\": \"...\"}`.\n",
+    "version": "1.2.0"
   },
   "paths": {
     "/health": {
@@ -347,7 +347,7 @@
           "answer": {
             "type": "string",
             "title": "Answer",
-            "description": "The answer as Markdown: '**Direct Answer**', '**Key Rules**' and '**Reasoning**' sections, or one plain sentence for off-topic questions. See the API description for details."
+            "description": "The answer as Markdown: '**Direct Answer**', '**Key Rules**' and '**Reasoning**' sections (labels translated for Dutch and French), or one plain sentence for off-topic questions. See the API description for details."
           },
           "standalone_query": {
             "type": "string",
@@ -358,6 +358,15 @@
             "type": "string",
             "title": "Variant",
             "description": "Detected hockey variant: 'outdoor', 'indoor' or 'hockey5s'."
+          },
+          "language": {
+            "type": "string",
+            "title": "Language",
+            "description": "ISO 639-1 code of the language the question was asked in, and the answer is written in (e.g. 'en', 'nl', 'fr').",
+            "default": "en",
+            "examples": [
+              "nl"
+            ]
           },
           "source_docs": {
             "items": {

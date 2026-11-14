@@ -13,6 +13,7 @@ def test_parse_plain_json():
         "variant": "indoor",
         "standalone_query": "Can I lift the ball indoors?",
         "keywords": ["raised ball", "lift"],
+        "language": "en",
     }
 
 

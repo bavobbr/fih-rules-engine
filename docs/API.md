@@ -8,7 +8,7 @@ its answers.
 - **Interactive docs**: `<base URL>/docs`
 - **Machine-readable contract (OpenAPI 3)**: [`docs/openapi.json`](openapi.json)
   ([raw](https://raw.githubusercontent.com/bavobbr/fih-rules-engine/main/docs/openapi.json))
-- **API version**: 1.1.0
+- **API version**: 1.2.0
 
 ## Authentication
 
@@ -88,6 +88,7 @@ Response:
 | `answer` | **Render as Markdown.** See [Showing the answer](#showing-the-answer). |
 | `variant` | `outdoor`, `indoor` or `hockey5s`. Showing it as a small badge ("Outdoor") helps users notice when the wrong variant was assumed. |
 | `source_docs` | The rule snippets the answer is based on, most relevant first, at most 10. Optional to show, for example as a collapsed "Sources" list. Can be empty. |
+| `language` | Language of the question and the answer, as an ISO 639-1 code (`en`, `nl`, `fr`, ...). Useful to set `lang` on the answer element. |
 | `standalone_query` | The question rewritten to stand on its own. For debugging only; no need to show it. |
 
 `source_docs[].metadata` keys depend on the source. Treat every key as optional:
@@ -134,7 +135,15 @@ The user asks what happens when ...
   selected country.
 - **Off-topic questions, greetings and questions the rules don't cover** return one plain sentence
   with no section labels, e.g. *"I can only answer questions related to the Rules of Hockey."*
-- The answer is in the language of the question.
+- The answer is in the language of the question. For Dutch and French, the section labels and the
+  local-rule marker are translated too; every other language gets the English labels:
+
+| `language` | Labels | Local rule marker |
+|---|---|---|
+| `en` (and any other language) | Direct Answer / Key Rules / Reasoning | (local rule) |
+| `nl` | Antwoord / Belangrijkste regels / Redenering | (lokale regel) |
+| `fr` | Réponse / Règles clés / Raisonnement | (règle locale) |
+
 - **Reasoning** can be long. Collapsing it behind a "Show reasoning" toggle keeps the chat compact.
 
 ## Timing and errors
@@ -150,6 +159,14 @@ The user asks what happens when ...
 | `422` | Invalid request (e.g. missing `query` or header) | Bug in the client; log it. |
 | `503` | Server still starting | Retry once after a few seconds. |
 | `500` | Internal error | Show "Something went wrong, please try again." |
+
+## Changes in 1.2.0 (November 2026)
+
+1. **Answers follow the question's language throughout.** Previously only the direct answer did;
+   the reasoning and rule explanations were often English, and the section labels always were.
+   Now all text is in the question's language, with translated labels for Dutch and French
+   (see [Showing the answer](#showing-the-answer)).
+2. **New response field `language`.** Existing clients can ignore it.
 
 ## Changes in 1.1.0 (November 2026)
 

@@ -3,16 +3,24 @@
 Centralized module for all LLM prompts used in the FIH Rules Engine.
 """
 
+# ISO 639-1 codes the answer prompt names explicitly; other codes are passed through as-is
+LANGUAGE_NAMES = {"en": "English", "nl": "Dutch", "fr": "French", "de": "German"}
+
 def get_rag_answer_prompt(
     detected_variant: str,
     jurisdiction_label: str,
     country_code: str,
     context_text: str,
-    standalone_query: str
+    standalone_query: str,
+    language: str = "en"
 ) -> str:
     """
     Generates the prompt for the final RAG answer generation.
     """
+    if language in LANGUAGE_NAMES:
+        language_name = LANGUAGE_NAMES[language]
+    else:
+        language_name = f"the language with ISO code '{language}'"
     if country_code:
         hierarchy = f"""
 HIERARCHY RULE - CRITICAL:
@@ -20,7 +28,7 @@ HIERARCHY RULE - CRITICAL:
 2. If a 'LOCAL' rule conflicts with an 'OFFICIAL' rule, the **LOCAL rule completely overrides** the official rule for this user.
 3. If no local rule exists for a specific situation, apply the standard official rule.
 """
-        local_note = f" If a Local Rule applies, say 'In {country_code}, the rule is...'."
+        local_note = f" If a Local Rule applies, say explicitly that this is the rule in {country_code}."
     else:
         hierarchy = ""
         local_note = ""
@@ -28,9 +36,9 @@ HIERARCHY RULE - CRITICAL:
     return f"""
 You are an expert FIH international Field Hockey Umpire for {detected_variant} hockey, answering questions for jurisdiction: **{jurisdiction_label}**.
 {hierarchy}
-MULTILINGUAL INSTRUCTION:
-The context may contain rules in different languages (e.g. English, Dutch, German). 
-Answer the user's question in the language they asked (usually English), translating the rule content if necessary.
+LANGUAGE - CRITICAL:
+The user writes in {language_name}. Write every text field in {language_name}, including "reasoning" and each
+"explanation", and translate rule content from the CONTEXT where needed. The CONTEXT may be in other languages.
 
 INSTRUCTIONS:
 1. **Analyze First**: You must mentally reason about the question before answering.
@@ -47,7 +55,7 @@ INSTRUCTIONS:
 OUTPUT FORMAT:
 Return ONLY a JSON object, no markdown fences, with these fields in this order:
 {{
-  "reasoning": "Step-by-step logic that leads to the answer, starting with what the user is asking. Example: 'The user asks about... Since the defender committed an offence in the circle...'",
+  "reasoning": "Step-by-step logic that leads to the answer. Start by restating what the user is asking, then explain which rule applies and why.",
   "is_refusal": false,
   "direct_answer": "A clear, human-friendly answer to the question in 1-3 sentences.{local_note}",
   "key_rules": [
@@ -66,7 +74,7 @@ FIELD RULES:
 - "is_local" is true only for snippets tagged [SOURCE: LOCAL ...].
 - If the CONTEXT does not answer the question, or the input is off-topic or a greeting, set "is_refusal" to true,
   put a short polite reply in "direct_answer", and leave "key_rules" empty.
-- Write all text fields in the language of the QUESTION. Plain text only, no markdown.
+- Write every text field in {language_name}. Plain text only, no markdown.
 
 CONTEXT:
 {context_text}
@@ -96,9 +104,10 @@ TASKS:
    "back of the stick" -> "rounded side", "card" -> "suspension") and include key nouns from the question.
    Leave out generic words that appear in almost every rule (ball, player, hockey, rule, team) and the variant name.
    If the question is not in English, also include the terms in the user's language.
+4. "language": the ISO 639-1 code of the language the User Input is written in (e.g. "en", "nl", "fr").
 
 Return ONLY a JSON object, no markdown:
-{{"variant": "...", "standalone_query": "...", "keywords": ["...", "..."]}}
+{{"variant": "...", "language": "...", "standalone_query": "...", "keywords": ["...", "..."]}}
 
 Chat History:
 {history_str or "(none)"}

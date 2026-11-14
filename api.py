@@ -62,7 +62,15 @@ The user asks for the duration of a green card suspension. ...
   The section is left out when no specific rule applies.
 - Off-topic questions, greetings and questions the rules do not cover return **one plain sentence**
   without any section labels.
-- The answer is written in the language of the question.
+- The answer is written in the language of the question, and so are the section labels for Dutch and French:
+
+| `language` | Labels | Local rule marker |
+|---|---|---|
+| `en` (and any other language) | Direct Answer / Key Rules / Reasoning | (local rule) |
+| `nl` | Antwoord / Belangrijkste regels / Redenering | (lokale regel) |
+| `fr` | Réponse / Règles clés / Raisonnement | (règle locale) |
+
+  The detected language is returned in `language`.
 
 ## Hockey variant
 The variant (outdoor, indoor or hockey5s) is detected from the question and the history; there is no request
@@ -79,7 +87,7 @@ returned in `variant`.
 app = FastAPI(
     title="FIH Rules API",
     description=API_DESCRIPTION,
-    version="1.1.0",
+    version="1.2.0",
     lifespan=lifespan
 )
 
@@ -163,8 +171,9 @@ class ChatResponse(BaseModel):
     answer: str = Field(
         ...,
         description=(
-            "The answer as Markdown: '**Direct Answer**', '**Key Rules**' and '**Reasoning**' sections, "
-            "or one plain sentence for off-topic questions. See the API description for details."
+            "The answer as Markdown: '**Direct Answer**', '**Key Rules**' and '**Reasoning**' sections "
+            "(labels translated for Dutch and French), or one plain sentence for off-topic questions. "
+            "See the API description for details."
         )
     )
     standalone_query: str = Field(
@@ -172,6 +181,11 @@ class ChatResponse(BaseModel):
         description="The question rewritten to stand on its own using the history (useful for debugging; no need to show it)."
     )
     variant: str = Field(..., description="Detected hockey variant: 'outdoor', 'indoor' or 'hockey5s'.")
+    language: str = Field(
+        "en",
+        description="ISO 639-1 code of the language the question was asked in, and the answer is written in (e.g. 'en', 'nl', 'fr').",
+        examples=["nl"]
+    )
     source_docs: List[SourceDoc] = Field(
         ...,
         description="The rule snippets the answer is based on, most relevant first (at most 10). Empty if nothing relevant was found."
@@ -260,6 +274,7 @@ async def chat(request: ChatRequest):
             answer=result["answer"],
             standalone_query=result["standalone_query"],
             variant=result["variant"],
+            language=result.get("language", "en"),
             source_docs=source_docs_data
         )
         
