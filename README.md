@@ -8,6 +8,8 @@ The FIH Rules Engine is a cloud-native headless API designed for integration int
 
 - **Instant Clarification**: Natural language query processing via REST API.
 - **Variant-Aware**: Automatic detection of Outdoor, Indoor, or Hockey5s contexts.
+- **Multilingual**: Answers in the language of the question, with translated section labels for Dutch and French.
+- **National Rules**: Country-specific rules (PDF, Word or text) layered on top of the official FIH rules.
 - **Verifiable Citations**: Reliable references to rule numbers and source pages.
 - **Admin Dashboard**: Secure interface for rule ingestion and performance evaluation.
 
@@ -36,13 +38,16 @@ The engine is built on a "Lean-Core" principle, minimizing long-running state wh
 *   **Intelligent Reranking**: **Vertex AI Ranking API** acts as a cross-encoder, re-ordering retrieved documents to ensure the most relevant context is prioritized for the LLM.
 *   **AI Orchestration**: **Vertex AI** powers the entire reasoning loop, from structural document analysis and embedding generation to the final context-aware answer synthesis.
 *   **Infrastructure-as-a-Service**: **Document AI** and **Cloud Storage** are used as high-fidelity tools during the administrative ingestion phase to transform raw PDFs into structured knowledge.
+*   **Two LLM calls per question**: one call plans the query (variant, language, standalone question, search keywords) and one writes the answer as JSON, which the engine renders to Markdown. There is no separate routing or reformatting pass.
 
 ---
 
 ## 🔄 System Flows
 
 ### Ingestion Pipeline (Sequence)
-The interaction between the Admin Dashboard, Core Engine, and Google Cloud services.
+The interaction between the Admin Dashboard, Core Engine, and Google Cloud services. Official
+rulebooks (PDF only) go through structural analysis and Document AI; national rules (PDF, `.docx`
+or `.txt`) are read as plain text and split into overlapping 1000-character chunks.
 
 ```mermaid
 sequenceDiagram
@@ -53,21 +58,24 @@ sequenceDiagram
     participant DocAI as Document AI
     participant DB as Cloud SQL (Postgres)
 
-    Admin->>Engine: ingest_pdf(file, variant)
-    Engine->>Vertex: analyze_structure(pdf)
-    Vertex-->>Engine: Structural Map
-    Engine->>Engine: Filter Relevant Pages
-    Engine->>GCS: Upload Filtered PDF
-    Engine->>DocAI: batch_process(gcs_uri)
-    DocAI-->>GCS: JSON Shards
-    GCS-->>Engine: Fetch Results
-    Engine->>Engine: Semantic Chunking & Summarization
-    Note over Engine, DB: Idempotent Variant Overwrite
-    Engine->>DB: delete_variant(variant)
+    Admin->>Engine: ingest_pdf(file, variant, country?, replaces?)
+    alt Official rulebook (PDF)
+        Engine->>Vertex: analyze_structure(pdf)
+        Vertex-->>Engine: Structural Map
+        Engine->>Engine: Filter Relevant Pages
+        Engine->>GCS: Upload Filtered PDF
+        Engine->>DocAI: batch_process(gcs_uri)
+        DocAI-->>GCS: JSON Shards
+        GCS-->>Engine: Fetch Results
+        Engine->>Engine: Rule-aware Chunking & Summarization
+    else National rules (PDF, DOCX, TXT)
+        Engine->>Engine: Extract text, fixed-size chunks
+    end
+    Note over Engine, DB: Per-document replace within (variant, country)
+    Engine->>DB: delete_source_file(same file name, and "replaces" if set)
     Engine->>Vertex: embed_documents(chunks)
     Vertex-->>Engine: Vectors
-    Engine->>DB: insert_batch(vectors, variant)
-    Note right of DB: Single Table Isolation
+    Engine->>DB: insert_batch(vectors, variant, country)
     Engine-->>Admin: Success (Chunk Count)
 ```
 
@@ -86,7 +94,7 @@ sequenceDiagram
     Client->>API: POST /chat {query, history, country}
     API->>Engine: query(text, history, country)
     Engine->>Vertex: _plan_query(history, question)
-    Vertex-->>Engine: {variant, standalone question, keywords}
+    Vertex-->>Engine: {variant, language, standalone question, keywords}
     Engine->>Vertex: embed_query(question)
     Vertex-->>Engine: Vector
     Engine->>DB: search_hybrid(question, vector, keywords)
@@ -94,22 +102,22 @@ sequenceDiagram
     DB-->>Engine: Ranked Candidates (RRF)
     Engine->>Rank: rank(question, candidates)
     Rank-->>Engine: Re-ordered Top Context
-    Engine->>Vertex: Generate Answer as JSON (Context + Question)
+    Engine->>Vertex: Generate Answer as JSON (Context + Question + Language)
     Vertex-->>Engine: {direct_answer, key_rules, reasoning}
-    Note over Engine: Render Markdown answer
+    Note over Engine: Render Markdown answer with localized labels
     Engine-->>API: Result Object
-    API-->>Client: 200 OK {answer, sources}
+    API-->>Client: 200 OK {answer, variant, language, source_docs}
 ```
 
 ---
 
 ## 🌍 Local Jurisdictions
 
-The engine goes beyond standard International Rules by supporting **National Appendices** and local rule overrides.
+The engine goes beyond standard International Rules by supporting **national rules** and local rule overrides.
 
 ### How it Works
 - **Contextual Awareness**: Users can specify a country code (e.g., `BEL` for Belgium) in their query.
-- **Dual-Path Retrieval**: The engine searches both the **Official International Rules** and the **National Appendix** simultaneously.
+- **Dual-Path Retrieval**: The engine searches both the **Official International Rules** and the selected country's **national rules** simultaneously.
 - **Smart Synthesis**: The LLM prioritizes local rules where applicable (e.g., "In Belgium, U14 games play 4x12 minutes") while falling back to international rules for everything else.
 
 ### API Usage
@@ -126,10 +134,16 @@ POST /chat
 ```
 
 ### Ingestion
-Admins can upload specific **National Appendices** via the **Knowledge Base** page in the Admin Dashboard:
-1. Select the Jurisdiction (e.g., "Belgium").
-2. Check "Is this a National Appendix?".
-3. Upload the PDF.
+Admins import documents via **Knowledge Base → Import** in the Admin Dashboard:
+1. Choose **Official FIH rules** or **National rules**. For national rules, pick the country.
+2. Pick the variant (outdoor, indoor, Hockey5s).
+3. Upload the file: PDF for official rules; PDF, Word (`.docx`) or text for national rules.
+4. Optionally pick a document it **replaces**. Otherwise the new document is added next to the
+   existing ones, so a country can have several national documents. Uploading a file with the
+   same name as an existing one replaces it.
+
+Replacing an official rulebook needs an extra confirmation, and the import button always says
+what will happen (add or replace, and where).
 
 ---
 
@@ -178,8 +192,8 @@ make dev-install    # Full dependencies (Admin + Evals + Dev)
 ## 🧑‍💻 Operations & Maintenance
 
 The Admin Dashboard (`make admin`) provides a specialized interface for:
-- **Knowledge Ingestion**: Upload rule PDFs and map them to a variant via the **Knowledge Base** page. 
-- **Automated Overwrites**: Ingesting a ruleset automatically replaces any existing data for that variant.
+- **Knowledge Ingestion**: Import official rulebooks and national rules via the **Knowledge Base** page (see [Ingestion](#ingestion)).
+- **Per-document replace**: Importing replaces only the same file name or the document chosen under "Replaces"; other documents stay.
 - **Performance Monitoring**: Visualizes RAGAS metrics and query traces.
 
 Maintenance targets:
@@ -195,7 +209,7 @@ The project is designed for serverless deployment on **Google Cloud Run**.
 
 Detailed, step-by-step instructions for project initialization, API activation, and final deployment (including custom Cloud Build configurations) can be found in the:
 
-👉 **[Infrastructure Setup Guide (deployment.md)](file:///home/bavobbr/dev/fih-rules-engine/deployment.md)**
+👉 **[Infrastructure Setup Guide (deployment.md)](deployment.md)**
 
 ---
 

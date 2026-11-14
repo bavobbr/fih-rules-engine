@@ -27,7 +27,7 @@ The project interacts with the following GCP services:
 | :--- | :--- | :--- |
 | **Compute** | **Cloud Run** | Managed serverless hosting for `fih-rules-api` and `fih-rules-admin`. |
 | **Storage** | **Cloud SQL** | Postgres with `pgvector` for semantic search and FTS for keyword search. |
-| **AI (LLM)** | **Vertex AI** | Gemini 3.5 Flash Lite for reasoning, routing, and synthesis. Served from the `global` endpoint (Gemini 3.x has no regional endpoints). |
+| **AI (LLM)** | **Vertex AI** | Gemini 3.5 Flash Lite for query planning (variant, language, keywords) and answer synthesis. Served from the `global` endpoint (Gemini 3.x has no regional endpoints). |
 | **AI (Embeds)**| **Vertex AI** | `text-embedding-004` for generating vector representations. |
 | **Ranking** | **Discovery Engine** | Vertex AI Ranking API for cross-encoder reranking. |
 | **Parsing** | **Document AI** | Layout analysis for accurate PDF-to-chunk transformation. |
@@ -92,6 +92,7 @@ source .venv/bin/activate
 | **Reset DB** | `make db-clean` (Truncates all vectors) |
 | **Run Evals** | `make evals` (Runs RAGAS pipeline) |
 | **Deploy API** | `gcloud run deploy ...` (See `deployment.md`) |
+| **Update API contract** | `make openapi` (regenerates `docs/openapi.json`; the contract test fails if it is stale) |
 
 ### 🗺️ Critical File Map
 | Feature | Primary File(s) |
@@ -100,6 +101,7 @@ source .venv/bin/activate
 | **Ingestion** | `loaders/` and `pages/2_Knowledge_Base.py` |
 | **DB Layer** | `database.py` (Postgres + pgvector wrapper) |
 | **Prompts** | `prompts.py` (Centralized system prompts) |
+| **API Contract** | `docs/API.md` (client guide), `docs/openapi.json` (generated) |
 | **Config** | `config.py` (Env vars and constants) |
 | **UI** | `api.py` (Public REST), `Query.py` (Admin Main), `pages/` (Admin features) |
 
@@ -108,3 +110,5 @@ source .venv/bin/activate
 2.  **Dual-Core**: Admin features (`Query.py`) and Public features (`api.py`) are deployed separately. Shared logic goes in `rag_engine.py`.
 3.  **Secrets**: NEVER hardcode API keys or DB passwords. Use `config.py` which reads `os.getenv`.
 4.  **Deps**: Use `requirements.txt` for minimal prod deps, `requirements-dev.txt` for dev/admin tools.
+5.  **Production database**: the local `.env` points at the live Cloud SQL instance. `make test` is mocked and safe, but `make evals`, `make admin`, `make api` and the scripts in `scripts/` connect to production. Ask before running them; never run `make db-clean` against it.
+6.  **External clients**: the website and Android app depend on the `/chat` contract. Keep changes backwards compatible, bump the version in `api.py`, and add a "Changes in x.y.z" entry to `docs/API.md`.
